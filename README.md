@@ -94,4 +94,5 @@ DjangoProject/
    ```bash
    # 创建模块应用
    python manage.py startapp xxx
+   # 之后需要在setting.py当中添加
    ```
