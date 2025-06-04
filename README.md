@@ -83,7 +83,6 @@ DjangoProject/
 ### HDFS文件统计分布式计算
    
    ```bash
-   python manage.py test_hdfs
    # 统计根目录文件类型
    python manage.py filetype_count
    # 统计指定目录（示例：/user/data）
@@ -91,6 +90,4 @@ DjangoProject/
    ```
 
 ### more
-1. 
-
-希望这段 `README.md` 能够满足你的需求！如果有任何需要调整或补充的地方，请随时告诉我。
+1. ......
