@@ -89,5 +89,9 @@ DjangoProject/
    python manage.py filetype_count --path /user/data
    ```
 
-### more
-1. ......
+### 创建其他模块应用
+   
+   ```bash
+   # 创建模块应用
+   python manage.py startapp xxx
+   ```
