@@ -46,7 +46,7 @@ DjangoProject/
    python manage.py test_hdfs
    ```
 
-### 数据预处理
+### 数据预处理（尚未完成）
 1. 在 `preprocessing` 应用程序中定义预处理逻辑。
 2. 调用 `process.py` 中的函数进行数据处理。
 
@@ -65,6 +65,22 @@ DjangoProject/
    python manage.py upload_to_hdfs /本地路径 /HDFS路径
    # 从HDFS删除指定路径的文件
    python manage.py delete_hdfs_path /HDFS路径
+   ```
+### HDFS文件的显示
+   
+   ```bash
+   # 列出HDFS根目录文件
+   python manage.py test_hdfs --list-files
+   # 读取指定文件
+   python manage.py test_hdfs --read-file /test/example.txt
+   ```
+### HDFS文件的显示
+   
+   ```bash
+   # 列出HDFS根目录文件
+   python manage.py test_hdfs --list-files
+   # 读取指定文件
+   python manage.py test_hdfs --read-file /test/example.txt
    ```
 
 ### 创建其他模块应用
