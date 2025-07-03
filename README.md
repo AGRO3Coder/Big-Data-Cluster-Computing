@@ -74,14 +74,6 @@ DjangoProject/
    # 读取指定文件
    python manage.py test_hdfs --read-file /test/example.txt
    ```
-### HDFS文件的显示
-   
-   ```bash
-   # 列出HDFS根目录文件
-   python manage.py test_hdfs --list-files
-   # 读取指定文件
-   python manage.py test_hdfs --read-file /test/example.txt
-   ```
 
 ### 创建其他模块应用
    
