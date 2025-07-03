@@ -125,3 +125,9 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# HDFS配置
+HDFS_NAMENODE = '172.16.190.131'
+HDFS_PORT = 9870
+HDFS_USER = 'hadoop'
