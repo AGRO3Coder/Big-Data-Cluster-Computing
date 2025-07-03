@@ -8,55 +8,25 @@
 ## 项目结构
 ```
 DjangoProject/
-├── .idea/
-├── DjangoProject/
-│   ├── __init__.py
-│   ├── asgi.py
-│   ├── settings.py
-│   ├── urls.py
-│   └── wsgi.py
-├── db.sqlite3
-├── manage.py
-├── myfile/
-│   ├── __init__.py
-│   ├── admin.py
-│   ├── apps.py
-│   ├── hdfs_config.py
-│   ├── models.py
-│   ├── tests.py
-│   └── views.py
-├── preprocessing/
-│   ├── __init__.py
-│   ├── admin.py
-│   ├── apps.py
-│   ├── models.py
-│   ├── process.py
-│   ├── tests.py
-│   └── views.py
-├── readfile/
-│   ├── __init__.py
-│   ├── admin.py
-│   ├── apps.py
+├── DjangoProject/               # 项目配置
+│   ├── settings.py              # 🌟包含HDFS配置项
+│   └── urls.py
+├── readfile/                    # 核心功能应用
 │   ├── management/
-│   │   ├── commands/
-│   │   │   ├── filetype_count.py
-│   │   │   └── __init__.py
-│   ├── models.py
-│   ├── tests.py
-│   └── views.py
-└── your_app/
-    ├── __init__.py
-    ├── management/
-    │   ├── __init__.py
-    │   ├── commands/
-    │   │   ├── test_hdfs.py
-    │   │   └── __init__.py
-    ├── utils/
-    │   ├── hdfs_client.py
-    │   └── __init__.py
-    ├── models.py
-    ├── tests.py
-    └── views.py
+│   │   └── commands/            # 管理命令
+│   │       ├── test_hdfs.py     # 🌟连接测试
+│   │       ├── filetype_count.py# 🌟文件统计
+│   │       ├── upload_to_hdfs.py# 🌟文件上传
+│   │       └── delete_hdfs_path.py # 🌟文件删除
+│   ├── utils/
+│   │   ├── hdfs_client.py       # 🌟连接客户端
+│   │   └── hdfs_operations.py  # 🌟操作类核心
+│   └── mapreduce/
+│       └── hdfs_counter.py      # MapReduce文件计数实现
+├── myfile/                      # 基础文件管理
+│   └── hdfs_config.py           # HDFS配置模板
+├── requirements.txt             # 🌟包含hdfs库依赖
+└── manage.py
 ```
 
 ## 安装与运行
