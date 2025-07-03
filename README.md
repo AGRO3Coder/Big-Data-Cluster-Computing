@@ -64,7 +64,7 @@ DjangoProject/
    # 向HDFS上传指定路径的本地文件
    python manage.py upload_to_hdfs /本地路径 /HDFS路径
    # 从HDFS删除指定路径的文件
-   python manage.py filetype_count --path /HDFS路径
+   python manage.py delete_hdfs_path /HDFS路径
    ```
 
 ### 创建其他模块应用
