@@ -88,6 +88,13 @@ DjangoProject/
    # 统计指定目录（示例：/user/data）
    python manage.py filetype_count --path /user/data
    ```
+### HDFS文件上传与删除
+   
+   ```bash
+   # 向HDFS上传指定路径的本地文件
+   python manage.py upload_to_hdfs /本地路径 /HDFS路径
+   # 从HDFS删除指定路径的文件
+   python manage.py filetype_count --path /HDFS路径
 
 ### 创建其他模块应用
    
