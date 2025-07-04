@@ -130,4 +130,4 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # HDFS配置
 HDFS_NAMENODE = '172.16.190.131'
 HDFS_PORT = 9870
-HDFS_USER = 'hadoop'
+HDFS_USER = 'root'

@@ -74,6 +74,32 @@ DjangoProject/
    # 读取指定文件
    python manage.py test_hdfs --read-file /test/example.txt
    ```
+### 图像预处理模块功能说明
+#### 普通预处理方式（单进程模式）
+   ```bash
+   # 基本语法
+   python manage.py batch_preprocess [输入目录] [输出目录] --operation=[操作类型]
+
+   # 可用操作类型：
+   # resize     - 调整尺寸到224x224
+   # grayscale  - 转为灰度图
+   # blur       - 高斯模糊
+   # edge       - 边缘检测
+   # histogram  - 直方图均衡化
+
+   # 示例（灰度化处理）
+   python manage.py batch_preprocess ./input/ ./output/ --operation=grayscale
+   ```
+
+#### MapReduce处理方式（并行模式）
+   
+   ```bash
+   # 专用语法（仅限resize操作）
+   python manage.py batch_preprocess ./input/ ./output/ --operation=resize --parallel
+
+   # 强制指定worker数量（默认自动检测CPU核心）
+   python manage.py batch_preprocess ./input/ ./output/ --operation=resize --parallel --workers=4
+   ```
 
 ### 创建其他模块应用
    
@@ -82,3 +108,6 @@ DjangoProject/
    python manage.py startapp xxx
    # 之后需要在setting.py当中添加
    ```
+
+
+
