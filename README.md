@@ -46,10 +46,6 @@ DjangoProject/
    python manage.py test_hdfs
    ```
 
-### 数据预处理（尚未完成）
-1. 在 `preprocessing` 应用程序中定义预处理逻辑。
-2. 调用 `process.py` 中的函数进行数据处理。
-
 ### HDFS文件统计分布式计算
    
    ```bash
