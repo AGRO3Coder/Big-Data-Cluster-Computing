@@ -1,0 +1,510 @@
+
+{% extends "layouts/base.html" %}
+{% load static %}
+{% block title %}文件上传到HDFS{% endblock %}
+
+{% block content %}
+    <div class="bg-gradient-to-br from-neutral-50 to-neutral-100 font-inter min-h-screen flex items-center justify-center p-4 md:p-8">
+        <div class="w-full max-w-2xl">
+            <!-- 文件上传卡片 -->
+            <div class="bg-white rounded-2xl shadow-2xl shadow-neutral-200/50 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 overflow-hidden">
+                <!-- 卡片顶部蓝色渐变区域 -->
+                <div class="bg-gradient-to-r from-primary to-secondary p-6 md:p-8 text-white relative overflow-hidden">
+                    <div class="relative z-10">
+                        <h1 class="text-[clamp(1.75rem,4vw,2.5rem)] font-bold text-center text-shadow mb-2">
+                            文件上传到HDFS</h1>
+                        <p class="text-center text-white/90 text-[clamp(1rem,1.75vw,1.25rem)] max-w-2xl mx-auto">
+                            请选择要上传到HDFS集群的文件并指定存储路径</p>
+                    </div>
+                    <!-- 装饰性图形 -->
+                    <div class="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32"></div>
+                    <div class="absolute bottom-0 left-0 w-40 h-40 bg-white/10 rounded-full -ml-20 -mb-20"></div>
+                </div>
+
+                <!-- 卡片主体内容 -->
+                <div class="p-6 md:p-8 relative">
+                    <!-- 拖放上传区域 -->
+                    <div id="drop-area"
+                         class="border-2 border-dashed border-neutral-300 rounded-2xl p-8 text-center transition-all duration-300 hover:border-primary/70 hover:bg-primary/5 mb-8 group">
+                        <div class="mb-4 transform group-hover:scale-105 transition-transform duration-300">
+                            <i class="fa fa-cloud-upload text-6xl text-primary/80 mb-4"></i>
+                            <p class="text-neutral-600 mb-2 text-lg">将文件拖放到此处上传</p>
+                            <p class="text-sm text-neutral-500">或点击下方按钮选择文件</p>
+                        </div>
+
+                        <!-- 文件选择按钮 -->
+                        <label class="relative inline-block cursor-pointer overflow-hidden">
+                        <span class="bg-primary hover:bg-primary/90 text-white font-medium py-3 px-6 rounded-lg transition-all duration-300 inline-flex items-center shadow-lg shadow-primary/20 hover:shadow-primary/30">
+                            <i class="fa fa-paperclip mr-2"></i>
+                            选择文件
+                        </span>
+                            <input type="file" id="file-input"
+                                   class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                        </label>
+                    </div>
+
+                    <!-- 文件信息区域 (初始隐藏) -->
+                    <div id="file-info"
+                         class="hidden mb-6 p-6 bg-white rounded-2xl border border-neutral-200 shadow-md transition-all duration-300">
+                        <div class="flex items-start">
+                            <div class="w-14 h-14 bg-primary/10 rounded-lg flex items-center justify-center mr-5 flex-shrink-0">
+                                <i class="fa fa-file-text-o text-primary text-2xl"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p id="file-name" class="font-semibold text-neutral-800 truncate text-lg"></p>
+                                <p id="file-size" class="text-sm text-neutral-500 mt-1"></p>
+                            </div>
+                            <button id="remove-file"
+                                    class="text-neutral-400 hover:text-red-500 transition-colors duration-300 ml-3">
+                                <i class="fa fa-times text-xl"></i>
+                            </button>
+                        </div>
+
+                        <!-- HDFS路径输入区域 -->
+                        <div class="mt-6 pt-6 border-t border-neutral-200">
+                            <label for="hdfs-path" class="block text-sm font-medium text-neutral-700 mb-2">
+                                HDFS存储路径 <span class="text-red-500">*</span>
+                            </label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                    <i class="fa fa-hdd-o text-neutral-400"></i>
+                                </div>
+                                <input
+                                        type="text"
+                                        id="hdfs-path"
+                                        class="block w-full pl-10 pr-4 py-3 border border-neutral-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-300"
+                                        placeholder="/user/"
+                                        required
+                                >
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 上传按钮 -->
+                    <button id="upload-button"
+                            class="w-full bg-primary hover:bg-primary/90 text-white font-semibold py-4 px-6 rounded-2xl transition-all duration-300 inline-flex items-center justify-center shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                            disabled>
+                        <i class="fa fa-upload mr-3 text-lg"></i>
+                        上传到HDFS
+                    </button>
+                </div>
+            </div>
+
+            <!-- 上传进度条 (初始隐藏) -->
+            <div id="upload-progress-container"
+                 class="hidden mt-8 bg-white rounded-2xl shadow-xl p-6 transition-all duration-300">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-neutral-800 text-lg">上传进度</h3>
+                    <span id="upload-percentage" class="text-sm text-neutral-500"></span>
+                </div>
+                <div class="w-full bg-neutral-100 rounded-full h-3">
+                    <div id="upload-progress-bar" class="bg-gradient-to-r from-primary to-secondary h-3 rounded-full"
+                         style="width: 0%"></div>
+                </div>
+                <div class="mt-4 flex justify-between text-sm text-neutral-500">
+                    <span id="upload-speed">等待上传...</span>
+                    <span id="upload-remaining"></span>
+                </div>
+            </div>
+
+            <!-- 上传成功提示 (初始隐藏) -->
+            <div id="upload-success"
+                 class="hidden mt-8 bg-white rounded-2xl shadow-xl p-8 text-center transition-all duration-300">
+                <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i class="fa fa-check text-green-500 text-3xl"></i>
+                </div>
+                <h3 class="font-bold text-neutral-800 text-xl mb-2">上传成功</h3>
+                <p id="hdfs-path-info" class="text-neutral-600 mb-6 max-w-md mx-auto"></p>
+                <button id="upload-another"
+                        class="bg-primary hover:bg-primary/90 text-white font-semibold py-3 px-6 rounded-2xl transition-all duration-300 inline-flex items-center shadow-lg shadow-primary/20">
+                    <i class="fa fa-plus mr-2"></i>
+                    上传另一个文件
+                </button>
+            </div>
+
+            <!-- 错误提示 (初始隐藏) -->
+            <div id="upload-error"
+                 class="hidden mt-8 bg-white rounded-2xl shadow-xl p-8 text-center transition-all duration-300">
+                <div class="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i class="fa fa-exclamation-triangle text-red-500 text-3xl"></i>
+                </div>
+                <h3 class="font-bold text-neutral-800 text-xl mb-2">上传失败</h3>
+                <p id="error-message" class="text-neutral-600 mb-6 max-w-md mx-auto"></p>
+                <button id="try-again"
+                        class="bg-primary hover:bg-primary/90 text-white font-semibold py-3 px-6 rounded-2xl transition-all duration-300 inline-flex items-center shadow-lg shadow-primary/20">
+                    <i class="fa fa-refresh mr-2"></i>
+                    重试
+                </button>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+<style type="text/tailwindcss">
+    @layer utilities {
+        .content-auto {
+            content-visibility: auto;
+        }
+
+        .transition-custom {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .bg-gradient-blue {
+            background: linear-gradient(135deg, #165DFF 0%, #4080FF 100%);
+        }
+
+        .text-shadow {
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+    }
+</style>
+{% block extra_css %}
+{% endblock %}
+{% block extra_js %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const dropArea = document.getElementById('drop-area');
+            const fileInput = document.getElementById('file-input');
+            const fileInfo = document.getElementById('file-info');
+            const fileName = document.getElementById('file-name');
+            const fileSize = document.getElementById('file-size');
+            const removeFile = document.getElementById('remove-file');
+            const uploadButton = document.getElementById('upload-button');
+            const uploadProgressContainer = document.getElementById('upload-progress-container');
+            const uploadProgressBar = document.getElementById('upload-progress-bar');
+            const uploadPercentage = document.getElementById('upload-percentage');
+            const uploadSpeed = document.getElementById('upload-speed');
+            const uploadRemaining = document.getElementById('upload-remaining');
+            const uploadSuccess = document.getElementById('upload-success');
+            const hdfsPathInfo = document.getElementById('hdfs-path-info');
+            const uploadAnother = document.getElementById('upload-another');
+            const uploadError = document.getElementById('upload-error');
+            const errorMessage = document.getElementById('error-message');
+            const tryAgain = document.getElementById('try-again');
+            const hdfsPathInput = document.getElementById('hdfs-path');
+
+            // 动态获取API路径
+            const API_URL = window.location.protocol + '//' + window.location.host + '/cy_apps/hdfs-upload/';
+
+            // 文件类型白名单（可根据需求扩展）
+            const ALLOWED_TYPES = ['image/*', 'text/*', 'application/pdf', 'application/msword',
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'];
+
+            // 最大文件大小限制（100MB）
+            const MAX_FILE_SIZE = 100 * 1024 * 1024;
+
+            // 拖放相关事件
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropArea.addEventListener(eventName, preventDefaults, false);
+            });
+
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropArea.addEventListener(eventName, highlight, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropArea.addEventListener(eventName, unhighlight, false);
+            });
+
+            function highlight() {
+                dropArea.classList.add('border-primary');
+                dropArea.classList.add('bg-primary/5');
+            }
+
+            function unhighlight() {
+                dropArea.classList.remove('border-primary');
+                dropArea.classList.remove('bg-primary/5');
+            }
+
+            // 处理拖放文件
+            dropArea.addEventListener('drop', handleDrop, false);
+
+            function handleDrop(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+
+                if (files.length > 0) {
+                    handleFiles(files[0]);
+                }
+            }
+
+            // 处理文件选择
+            fileInput.addEventListener('change', function () {
+                if (this.files.length > 0) {
+                    handleFiles(this.files[0]);
+                }
+            });
+
+            // 处理选中的文件（包含验证）
+            function handleFiles(file) {
+                // 文件类型验证
+                if (!isAllowedFileType(file.type)) {
+                    showUploadError(`不支持的文件类型: ${file.type}`);
+                    return;
+                }
+
+                // 文件大小验证
+                if (file.size > MAX_FILE_SIZE) {
+                    showUploadError(`文件大小不能超过 ${formatFileSize(MAX_FILE_SIZE)}`);
+                    return;
+                }
+
+                // 显示文件信息
+                fileName.textContent = file.name;
+                fileSize.textContent = formatFileSize(file.size);
+                fileInfo.classList.remove('hidden');
+
+                // 设置默认路径（可选）
+                const defaultPath = '/user/' + getCurrentUsername() + '/';
+                hdfsPathInput.value = defaultPath;
+
+                // 启用上传按钮
+                uploadButton.disabled = false;
+
+                // 绑定上传按钮点击事件，使用当前文件
+                uploadButton.addEventListener('click', function () {
+                    // 验证HDFS路径
+                    const hdfsPath = hdfsPathInput.value.trim();
+                    if (!hdfsPath) {
+                        showUploadError('请输入HDFS存储路径');
+                        return;
+                    }
+
+                    // 确保路径以斜杠结尾
+                    const normalizedPath = hdfsPath.endsWith('/') ? hdfsPath : hdfsPath + '/';
+
+                    uploadFileToHDFS(file, normalizedPath);
+                });
+            }
+
+            // 检查文件类型是否允许
+            function isAllowedFileType(fileType) {
+                return ALLOWED_TYPES.some(type => {
+                    if (type === 'image/*') return fileType.startsWith('image/');
+                    if (type === 'text/*') return fileType.startsWith('text/');
+                    return type === fileType;
+                });
+            }
+
+            // 上传文件到HDFS
+            function uploadFileToHDFS(file, hdfsPath) {
+                // 显示进度条，隐藏上传按钮并禁用
+                uploadButton.disabled = true;
+                uploadButton.innerHTML = '<i class="fa fa-spinner fa-spin mr-2"></i> 上传中...';
+                uploadProgressContainer.classList.remove('hidden');
+                uploadSuccess.classList.add('hidden');
+                uploadError.classList.add('hidden');
+
+                // 初始化进度
+                let startTime = null;
+                let lastUpdateTime = null;
+                let lastUploadedBytes = 0;
+
+                // 创建FormData
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('hdfs_path', hdfsPath);
+
+                // 发送请求到后端API
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', API_URL);
+                xhr.timeout = 60000; // 60秒超时
+
+                // 监听上传进度
+                xhr.upload.addEventListener('progress', function (e) {
+                    if (e.lengthComputable) {
+                        const currentTime = Date.now();
+                        const elapsedTime = (currentTime - (startTime || currentTime)) / 1000; // 秒
+
+                        // 计算实时速度（仅在有足够时间间隔时更新，避免频繁计算）
+                        let speed = 0;
+                        if (lastUpdateTime && (currentTime - lastUpdateTime) > 300) {
+                            const bytesDelta = e.loaded - lastUploadedBytes;
+                            const timeDelta = (currentTime - lastUpdateTime) / 1000;
+                            speed = timeDelta > 0 ? (bytesDelta / timeDelta) : 0;
+
+                            lastUpdateTime = currentTime;
+                            lastUploadedBytes = e.loaded;
+                        } else if (!lastUpdateTime) {
+                            startTime = currentTime;
+                            lastUpdateTime = currentTime;
+                            lastUploadedBytes = e.loaded;
+                        }
+
+                        // 计算进度和剩余时间
+                        const progress = (e.loaded / e.total) * 100;
+                        const remainingBytes = e.total - e.loaded;
+
+                        // 更新进度显示
+                        updateProgress(progress, speed, remainingBytes);
+                    }
+                });
+
+                xhr.addEventListener('load', function () {
+                    // 重置按钮状态
+                    uploadButton.disabled = false;
+                    uploadButton.innerHTML = '<i class="fa fa-upload mr-2"></i> 上传到HDFS';
+
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        try {
+                            const response = JSON.parse(xhr.responseText);
+                            if (response.success) {
+                                // 上传成功
+                                uploadProgressBar.style.width = '100%';
+                                uploadPercentage.textContent = '100%';
+                                hdfsPathInfo.textContent = `文件已上传至HDFS：${response.hdfs_path}`;
+
+                                setTimeout(function () {
+                                    uploadProgressContainer.classList.add('hidden');
+                                    uploadSuccess.classList.remove('hidden');
+                                }, 500);
+                            } else {
+                                // 业务逻辑错误
+                                showUploadError(`上传失败：${response.error || '未知错误'}`);
+                            }
+                        } catch (err) {
+                            showUploadError('解析响应失败，请检查后端返回格式');
+                        }
+                    } else if (xhr.status === 401) {
+                        // 未授权错误
+                        showUploadError('身份验证失败，请重新登录');
+                    } else if (xhr.status === 404) {
+                        // 路径错误
+                        showUploadError('API路径不存在，请检查配置');
+                    } else {
+                        // 其他HTTP错误
+                        showUploadError(`HTTP错误：${xhr.status} - ${xhr.statusText}`);
+                    }
+                });
+
+                xhr.addEventListener('error', function () {
+                    // 重置按钮状态
+                    uploadButton.disabled = false;
+                    uploadButton.innerHTML = '<i class="fa fa-upload mr-2"></i> 上传到HDFS';
+                    showUploadError('网络错误，请检查服务器连接');
+                });
+
+                xhr.addEventListener('timeout', function () {
+                    // 重置按钮状态
+                    uploadButton.disabled = false;
+                    uploadButton.innerHTML = '<i class="fa fa-upload mr-2"></i> 上传到HDFS';
+                    showUploadError('请求超时，请检查网络连接或文件大小');
+                });
+
+                xhr.addEventListener('abort', function () {
+                    // 重置按钮状态
+                    uploadButton.disabled = false;
+                    uploadButton.innerHTML = '<i class="fa fa-upload mr-2"></i> 上传到HDFS';
+                    showUploadError('上传被取消');
+                });
+
+                // 发送请求
+                xhr.send(formData);
+            }
+
+            // 更新进度显示（优化版）
+            function updateProgress(progress, speed, remainingBytes) {
+                uploadProgressBar.style.width = `${progress}%`;
+                uploadPercentage.textContent = `${Math.round(progress)}%`;
+
+                // 格式化速度（添加单位转换）
+                const formattedSpeed = speed > 0 ? formatBytes(speed) : '等待计算...';
+                uploadSpeed.textContent = `${formattedSpeed}/s`;
+
+                // 估算剩余时间（更友好的显示）
+                if (speed > 0) {
+                    const remainingSeconds = Math.ceil(remainingBytes / speed);
+                    if (remainingSeconds < 60) {
+                        uploadRemaining.textContent = `剩余时间: ${remainingSeconds}秒`;
+                    } else if (remainingSeconds < 3600) {
+                        const minutes = Math.floor(remainingSeconds / 60);
+                        const seconds = remainingSeconds % 60;
+                        uploadRemaining.textContent = `剩余时间: ${minutes}分${seconds}秒`;
+                    } else {
+                        const hours = Math.floor(remainingSeconds / 3600);
+                        const minutes = Math.floor((remainingSeconds % 3600) / 60);
+                        uploadRemaining.textContent = `剩余时间: ${hours}时${minutes}分`;
+                    }
+                } else if (remainingBytes > 0) {
+                    uploadRemaining.textContent = '准备计算上传速度...';
+                } else {
+                    uploadRemaining.textContent = '';
+                }
+            }
+
+            // 显示上传错误
+            function showUploadError(message) {
+                errorMessage.textContent = message;
+                uploadProgressContainer.classList.add('hidden');
+                uploadError.classList.remove('hidden');
+
+                // 重置按钮状态
+                uploadButton.disabled = false;
+                uploadButton.innerHTML = '<i class="fa fa-upload mr-2"></i> 上传到HDFS';
+            }
+
+            // 移除已选文件
+            removeFile.addEventListener('click', function () {
+                fileInfo.classList.add('hidden');
+                uploadButton.disabled = true;
+                uploadButton.innerHTML = '<i class="fa fa-upload mr-2"></i> 上传到HDFS';
+                uploadProgressContainer.classList.add('hidden');
+                uploadSuccess.classList.add('hidden');
+                uploadError.classList.add('hidden');
+                fileInput.value = '';
+            });
+
+            // 上传另一个文件
+            uploadAnother.addEventListener('click', function () {
+                fileInfo.classList.add('hidden');
+                uploadButton.disabled = true;
+                uploadButton.innerHTML = '<i class="fa fa-upload mr-2"></i> 上传到HDFS';
+                uploadSuccess.classList.add('hidden');
+                fileInput.value = '';
+            });
+
+            // 重试上传
+            tryAgain.addEventListener('click', function () {
+                const file = fileInput.files[0];
+                if (file) {
+                    uploadFileToHDFS(file, hdfsPathInput.value);
+                } else {
+                    alert('请先选择文件');
+                }
+            });
+
+            // 格式化文件大小
+            function formatFileSize(bytes) {
+                if (bytes === 0) return '0 Bytes';
+
+                const k = 1024;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            }
+
+            // 格式化字节（用于速度显示，更简洁的显示）
+            function formatBytes(bytes) {
+                if (bytes < 1024) return bytes + ' B';
+                const k = 1024;
+                const sizes = ['KB', 'MB', 'GB', 'TB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return (bytes / Math.pow(k, i)).toFixed(1) + ' ' + sizes[i];
+            }
+
+            // 获取当前用户名的函数（示例，实际实现需根据后端逻辑调整）
+            function getCurrentUsername() {
+                // 这里应该从后端获取当前用户信息，或者从本地存储获取
+                // 示例：假设从localStorage获取
+                return localStorage.getItem('username') || 'default';
+            }
+        });
+    </script>
+{% endblock %}

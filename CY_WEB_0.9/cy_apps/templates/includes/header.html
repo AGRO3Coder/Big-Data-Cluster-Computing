@@ -1,0 +1,282 @@
+<!-- 顶部导航条（第一层） -->
+<div class="bg-accent text-white text-sm">
+    <div class="container mx-auto py-2 flex justify-between items-center">
+        <div class="flex items-center px-4 py-2 font-medium text-white hover:text-light transition-colors select-none text-lg">
+            <i class="fa fa-user-circle-o mr-2"></i>
+            {% if user.is_authenticated %}
+                欢迎您，{{ user.username }}
+            {% else %}
+                <a href="{% url 'login' %}" class="hover:underline">请登录</a>
+            {% endif %}
+        </div>
+        <!-- 搜索区域 -->
+        <div class="relative flex items-center h-10">
+            <!-- 搜索按钮（点击后隐藏） -->
+            <button id="search-toggle"
+                    class="h-10 w-10 flex justify-center items-center bg-accent text-white rounded-r-md transition-opacity duration-300">
+                <i class="fa fa-search text-lg"></i>
+            </button>
+
+            <!-- 搜索框区域（初始隐藏） -->
+            <form id="search-box" action="{% url 'search' %}" method="get"
+                  class="absolute right-full top-0 flex h-10 items-center
+                 secondary backdrop-blur-sm text-white
+                 transition-all duration-300 ease-in-out
+                 opacity-0 translate-x-full pointer-events-none w-0 overflow-hidden z-50">
+                <div class="flex items-center bg-transparent border-2 border-white rounded-md overflow-hidden w-max">
+                    <button type="submit" id="search-icon-button">
+                        <i class="search-i fa fa-search
+             text-white px-2 border-r-[2px] border-white
+             flex-shrink-0 text-lg pointer-events-none"
+                           tabindex="-1" aria-hidden="true"></i>
+                    </button>
+                    <input id="search-input" type="text" name="q" placeholder="请输入关键词"
+                           class="text-sm text-white/90 placeholder:text-white/60 bg-transparent focus:outline-none focus:ring-0 pl-2 pr-3"/>
+                </div>
+
+
+            </form>
+        </div>
+    </div>
+</div>
+
+{% if request.user.is_authenticated %}
+    <!-- 主导航栏（第二层） -->
+    <nav id="main-nav" class="relative bg-primary text-white sticky top-0 z-50 shadow-md">
+        <div class="absolute -top-px left-0 w-full h-px bg-primary z-[60] pointer-events-none"></div>
+
+        <div class="container mx-auto">
+            <div class="flex items-center justify-between h-16 md:h-20">
+
+                <!-- Logo区域 -->
+                <a href="{% url 'workspace' %}" class="flex items-center">
+                    <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+                    </svg>
+                    <span class="ml-2 text-lg font-semibold hidden sm:inline-block">智能生物识别</span>
+                </a>
+
+                <!-- 桌面导航 -->
+                <div class="hidden md:flex items-center space-x-1">
+                    <div class="relative group">
+                        <button id="dropdownBtn1"
+                                class="nav-item flex items-center px-4 py-2 text-xs sm:text-sm md:text-base font-medium h-16 md:h-20 hover:nav-item-hover">
+                            项目概述
+                            <i id="dropdownIcon1"
+                               class="fa fa-chevron-down ml-2 text-xs sm:text-sm md:text-base transition-transform duration-300"></i>
+                        </button>
+                        <div id="dropdownMenu1"
+                             class="dropdown-appear absolute left-0 z-50 bg-secondary dropdown-shadow w-full min-w-full opacity-0 invisible transition-all duration-300 -translate-y-2">
+                            <div class="py-1">
+                                <a href="{% url 'detect' %}" class="block px-4 py-2 text-sm submenu-link-hover">目标检测</a>
+                                <a href="#" class="block px-4 py-2 text-sm submenu-link-hover">项目背景</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="relative group">
+                        <button id="dropdownBtn2"
+                                class="nav-item flex items-center px-4 py-2 text-xs sm:text-sm md:text-base font-medium h-16 md:h-20 hover:nav-item-hover">
+                            团队协作
+                            <i id="dropdownIcon2"
+                               class="fa fa-chevron-down ml-2 text-xs sm:text-sm md:text-base transition-transform duration-300"></i>
+                        </button>
+                        <div id="dropdownMenu2"
+                             class="dropdown-appear absolute left-0 z-50 bg-secondary dropdown-shadow w-full min-w-full opacity-0 invisible transition-all duration-300 -translate-y-2">
+                            <div class="py-2">
+                                <a href="#" class="block px-4 py-2 text-sm submenu-link-hover">团队分工</a>
+                                <a href="#" class="block px-4 py-2 text-sm submenu-link-hover">协作工具</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="relative group">
+                        <button id="dropdownBtn3"
+                                class="nav-item flex items-center px-4 py-2 text-xs sm:text-sm md:text-base font-medium h-16 md:h-20 hover:nav-item-hover">
+                            识别技术
+                            <i id="dropdownIcon3"
+                               class="fa fa-chevron-down ml-2 text-xs sm:text-sm md:text-base transition-transform duration-300"></i>
+                        </button>
+                        <div id="dropdownMenu3"
+                             class="dropdown-appear absolute left-0 z-50 bg-secondary dropdown-shadow w-full min-w-full opacity-0 invisible transition-all duration-300 -translate-y-2">
+                            <div class="py-2">
+                                <a href="#" class="block px-4 py-2 text-sm submenu-link-hover">图像识别算法</a>
+                                <a href="#" class="block px-4 py-2 text-sm submenu-link-hover">图像预处理技术</a>
+                                <a href="#" class="block px-4 py-2 text-sm submenu-link-hover">数据增强方法</a>
+                                <a href="#" class="block px-4 py-2 text-sm submenu-link-hover">模型训练与优化</a>
+                                <a href="#" class="block px-4 py-2 text-sm submenu-link-hover">模型评估与测试</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="relative group">
+                        <button id="dropdownBtn4"
+                                class="nav-item flex items-center px-4 py-2 text-xs sm:text-sm md:text-base font-medium h-16 md:h-20 hover:nav-item-hover">
+                            数据集
+                            <i id="dropdownIcon4"
+                               class="fa fa-chevron-down ml-2 text-xs sm:text-sm md:text-base transition-transform duration-300"></i>
+                        </button>
+                        <div id="dropdownMenu4"
+                             class="dropdown-appear absolute left-0 z-50 bg-secondary dropdown-shadow w-full min-w-full opacity-0 invisible transition-all duration-300 -translate-y-2">
+                            <div class="py-2">
+                                <a href="#" class="block px-4 py-2 text-sm submenu-link-hover">公开数据集</a>
+                                <a href="#" class="block px-4 py-2 text-sm submenu-link-hover">数据集贡献</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="relative group">
+                        <button id="dropdownBtn5"
+                                class="nav-item flex items-center px-4 py-2 text-xs sm:text-sm md:text-base font-medium h-16 md:h-20 hover:nav-item-hover">
+                            用户指南
+                            <i id="dropdownIcon5"
+                               class="fa fa-chevron-down ml-2 text-xs sm:text-sm md:text-base transition-transform duration-300"></i>
+                        </button>
+                        <div id="dropdownMenu5"
+                             class="dropdown-appear absolute left-0 z-50 bg-secondary dropdown-shadow w-full min-w-full opacity-0 invisible transition-all duration-300 -translate-y-2">
+                            <div class="py-2">
+                                <a href="#" class="block px-4 py-2 text-sm submenu-link-hover">系统使用教程</a>
+                                <a href="#" class="block px-4 py-2 text-sm submenu-link-hover">常见问题解答</a>
+                                <a href="#" class="block px-4 py-2 text-sm submenu-link-hover">技术支持</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="relative group">
+                        <button id="dropdownBtn6"
+                                class="nav-item flex items-center px-4 py-2 text-xs sm:text-sm md:text-base font-medium h-16 md:h-20 hover:nav-item-hover">
+                            用户
+                            <i id="dropdownIcon6"
+                               class="fa fa-chevron-down ml-2 text-xs sm:text-sm md:text-base transition-transform duration-300"></i>
+                        </button>
+                        <div id="dropdownMenu6"
+                             class="dropdown-appear absolute left-0 z-50 w-64 bg-secondary dropdown-shadow opacity-0 invisible transition-all duration-300 -translate-y-2">
+                            <div class="py-2">
+                                <a href="{% url 'profile' %}"
+                                   class="block px-4 py-2 text-sm submenu-link-hover">个人信息</a>
+                                <a href="{% url 'change_password' %}"
+                                   class="block px-4 py-2 text-sm submenu-link-hover">修改密码</a>
+                                <!-- 退出登录链接（样式不变） -->
+                                <a href="#" id="logout-link" class="block px-4 py-2 text-sm submenu-link-hover">
+                                    退出登录
+                                </a>
+
+                                <!-- 隐藏的注销表单 -->
+                                <form id="logout-form" method="POST" action="{% url 'logout' %}" style="display: none;">
+                                    {% csrf_token %}
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- 导航栏用户管理菜单（替换原"关于我们"） -->
+                    {% if user.is_superuser or user.is_staff %}
+                        <div class="relative group">
+                            <button id="dropdownBtn7"
+                                    class="nav-item flex items-center px-4 py-2 text-xs sm:text-sm md:text-base font-medium h-16 md:h-20 hover:nav-item-hover">
+                                用户管理
+                                <i id="dropdownIcon7"
+                                   class="fa fa-chevron-down ml-2 text-xs sm:text-sm md:text-base transition-transform duration-300"></i>
+                            </button>
+                            <div id="dropdownMenu7"
+                                 class="dropdown-appear absolute left-0 z-50 bg-secondary dropdown-shadow w-full min-w-full opacity-0 invisible transition-all duration-300 -translate-y-2">
+                                <div class="py-2">
+                                    <a href="{% url 'user_list' %}"
+                                       class="block px-4 py-2 text-sm submenu-link-hover">用户列表</a>
+
+                                    <!-- 超级用户显示权限管理 -->
+                                    {% if user.is_superuser %}
+                                        <a href="{% url 'manage_user_permissions' %}"
+                                           class="block px-4 py-2 text-sm submenu-link-hover">权限管理</a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+                <!-- 移动端菜单按钮 -->
+                <div class="md:hidden flex items-center">
+                    <button id="mobile-menu-button" class="text-white focus:outline-none">
+                        <i class="fa fa-bars text-xl"></i>
+                    </button>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- 移动端菜单 -->
+        <div id="mobile-menu" class="hidden md:hidden bg-secondary">
+            <div class="px-2 pt-2 pb-3 space-y-1">
+                <button class="mobile-dropdown-btn w-full flex items-center justify-between px-4 py-2 text-left text-sm font-medium text-white hover:bg-accent">
+                    项目概述 <i class="fa fa-chevron-down text-xs"></i>
+                </button>
+                <div class="mobile-dropdown hidden px-4 py-2 space-y-1">
+                    <a href="#" class="block px-3 py-2 text-sm text-white hover:bg-accent rounded-md">项目背景</a>
+                    <a href="#" class="block px-3 py-2 text-sm text-white hover:bg-accent rounded-md">项目目标</a>
+                </div>
+
+                <button class="mobile-dropdown-btn w-full flex items-center justify-between px-4 py-2 text-left text-sm font-medium text-white hover:bg-accent">
+                    团队协作 <i class="fa fa-chevron-down text-xs"></i>
+                </button>
+                <div class="mobile-dropdown hidden px-4 py-2 space-y-1">
+                    <a href="#" class="block px-3 py-2 text-sm text-white hover:bg-accent rounded-md">团队分工</a>
+                    <a href="#" class="block px-3 py-2 text-sm text-white hover:bg-accent rounded-md">协作工具</a>
+                </div>
+
+                <button class="mobile-dropdown-btn w-full flex items-center justify-between px-4 py-2 text-left text-sm font-medium text-white hover:bg-accent">
+                    识别技术 <i class="fa fa-chevron-down text-xs"></i>
+                </button>
+                <div class="mobile-dropdown hidden px-4 py-2 space-y-1">
+                    <a href="#" class="block px-3 py-2 text-sm text-white hover:bg-accent rounded-md">图像识别算法</a>
+                    <a href="#" class="block px-3 py-2 text-sm text-white hover:bg-accent rounded-md">图像预处理技术</a>
+                    <a href="#" class="block px-3 py-2 text-sm text-white hover:bg-accent rounded-md">数据增强方法</a>
+                    <a href="#" class="block px-3 py-2 text-sm text-white hover:bg-accent rounded-md">模型训练与优化</a>
+                    <a href="#" class="block px-3 py-2 text-sm text-white hover:bg-accent rounded-md">模型评估与测试</a>
+                </div>
+
+                <button class="mobile-dropdown-btn w-full flex items-center justify-between px-4 py-2 text-left text-sm font-medium text-white hover:bg-accent">
+                    数据集 <i class="fa fa-chevron-down text-xs"></i>
+                </button>
+                <div class="mobile-dropdown hidden px-4 py-2 space-y-1">
+                    <a href="#" class="block px-3 py-2 text-sm text-white hover:bg-accent rounded-md">公开数据集</a>
+                    <a href="#" class="block px-3 py-2 text-sm text-white hover:bg-accent rounded-md">数据集贡献</a>
+                    <a href="#" class="block px-3 py-2 text-sm text-white hover:bg-accent rounded-md">数据集使用指南</a>
+                </div>
+
+                <button class="mobile-dropdown-btn w-full flex items-center justify-between px-4 py-2 text-left text-sm font-medium text-white hover:bg-accent">
+                    用户指南 <i class="fa fa-chevron-down text-xs"></i>
+                </button>
+                <div class="mobile-dropdown hidden px-4 py-2 space-y-1">
+                    <a href="#" class="block px-3 py-2 text-sm text-white hover:bg-accent rounded-md">系统使用教程</a>
+                    <a href="#" class="block px-3 py-2 text-sm text-white hover:bg-accent rounded-md">常见问题解答</a>
+                    <a href="#" class="block px-3 py-2 text-sm text-white hover:bg-accent rounded-md">技术支持</a>
+                </div>
+
+                <button class="mobile-dropdown-btn w-full flex items-center justify-between px-4 py-2 text-left text-sm font-medium text-white hover:bg-accent">
+                    关于我们 <i class="fa fa-chevron-down text-xs"></i>
+                </button>
+                <div class="mobile-dropdown hidden px-4 py-2 space-y-1">
+                    <a href="#" class="block px-3 py-2 text-sm text-white hover:bg-accent rounded-md">团队介绍</a>
+                    <a href="#" class="block px-3 py-2 text-sm text-white hover:bg-accent rounded-md">联系方式</a>
+                    <a href="#" class="block px-3 py-2 text-sm text-white hover:bg-accent rounded-md">平台搭建历程</a>
+                </div>
+
+                <button class="mobile-dropdown-btn w-full flex items-center justify-between px-4 py-2 text-left text-sm font-medium text-white hover:bg-accent">
+                    用户 <i class="fa fa-chevron-down text-xs"></i>
+                </button>
+                <div class="mobile-dropdown hidden px-4 py-2 space-y-1">
+                    <a href="#" class="block px-3 py-2 text-sm text-white hover:bg-accent rounded-md">修改密码</a>
+                    <!-- 退出登录链接（样式不变） -->
+                    <a href="#" id="logout-link" class="block px-4 py-2 text-sm submenu-link-hover">
+                        退出登录
+                    </a>
+
+                    <!-- 隐藏的注销表单 -->
+                    <form id="logout-form" method="POST" action="{% url 'logout' %}" style="display: none;">
+                        {% csrf_token %}
+                    </form>
+                </div>
+            </div>
+        </div>
+
+    </nav>
+{% endif %}

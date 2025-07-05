@@ -1,0 +1,231 @@
+{% extends "layouts/base.html" %}
+{% load static %}  {# 加载静态文件标签，放在模板文件开头合适位置 #}
+{#{% block title %} {% endblock %}#}
+
+{% block content %}
+    <title>HDFS 文件下载</title>
+    <!-- 引入 Bootstrap 图标 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <style>
+        /* 全局基础样式重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", sans-serif;
+        }
+
+        /* 新增：页面整体居中容器 */
+        .page-center {
+            min-height: 100vh; /* 占满视口高度 */
+            display: flex; /* 使用Flex布局 */
+            justify-content: center; /* 水平居中 */
+            align-items: center; /* 垂直居中 */
+            padding: 20px; /* 防止小屏幕下边缘溢出 */
+        }
+
+        /* 主容器样式（调整宽度以适配响应式） */
+        .download-container {
+            max-width: 500px; /* 最大宽度，小屏幕时自动缩小 */
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+
+        /* 主容器样式 */
+        .download-container {
+            width: 500px;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+
+        /* 顶部蓝色标题区域 */
+        .download-header {
+            background: #0b4b87;
+            color: #fff;
+            padding: 24px;
+            text-align: center;
+        }
+
+        .download-header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .download-header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        /* 内容表单区域 */
+        .download-body {
+            padding: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+            color: #555;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-input::placeholder {
+            color: #ccc;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #4696f5;
+            box-shadow: 0 0 0 2px rgba(70, 150, 245, 0.1);
+        }
+
+        .example-tip {
+            font-size: 12px;
+            color: #999;
+            margin-top: 4px;
+        }
+
+        /* 下载按钮样式 */
+        .download-btn {
+            width: 100%;
+            padding: 12px;
+            background: #0b4b87;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .download-btn:hover {
+            box-shadow: 0 6px 20px rgba(70, 150, 245, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .download-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 4px 15px rgba(70, 150, 245, 0.2);
+        }
+
+        /* 结果提示区域 */
+        .result {
+            margin-top: 20px;
+            padding: 12px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            display: none; /* 初始隐藏 */
+        }
+
+        .result.success {
+            background-color: #eaf8f5;
+            color: #28a745;
+            border: 1px solid #c3f1e2;
+        }
+
+        .result.error {
+            background-color: #fff3f0;
+            color: #dc3545;
+            border: 1px solid #f9d2cc;
+        }
+    </style>
+    <div class="page-center">
+        <div class="download-container">
+            <!-- 顶部标题区 -->
+            <div class="download-header">
+                <h1>HDFS 文件下载</h1>
+                <p>从 HDFS 集群下载文件到本地</p>
+            </div>
+
+            <!-- 表单内容区 -->
+            <div class="download-body">
+                <div class="form-group">
+                    <label class="form-label">HDFS 文件路径</label>
+                    <input type="text" class="form-input" id="hdfsPath" placeholder="/" value="/">
+                    <div class="example-tip">例如: /user/root/data/example.txt</div>
+                </div>
+
+                <button class="download-btn" onclick="downloadFile()">
+                    <i class="bi bi-download" style="font-size: 18px; margin-right: 8px;"></i>
+                    从 HDFS 下载文件
+                </button>
+
+                <div class="result" id="result"></div>
+            </div>
+        </div>
+    </div>
+
+<script>
+    function downloadFile() {
+        const hdfsPath = document.getElementById('hdfsPath').value.trim();
+        const resultDiv = document.getElementById('result');
+
+        if (!hdfsPath) {
+            resultDiv.className = 'result error';
+            resultDiv.innerText = '请输入HDFS文件路径';
+            resultDiv.style.display = 'block';
+            return;
+        }
+
+        resultDiv.style.display = 'none';
+        resultDiv.innerText = '';
+
+        // 创建临时链接用于文件下载
+        const link = document.createElement('a');
+        link.style.display = 'none';
+        document.body.appendChild(link);
+
+        // 构建下载URL（使用新的接口名称）
+        const downloadUrl = `/hdfs-file-download/?hdfs_path=${encodeURIComponent(hdfsPath)}`;
+
+        // 设置链接属性并触发下载
+        link.href = downloadUrl;
+        link.setAttribute('download', ''); // 浏览器自动使用文件名
+
+        // 模拟点击下载链接
+        link.click();
+
+        // 下载完成后清理
+        setTimeout(() => {
+            document.body.removeChild(link);
+
+            // 检查下载状态（可选）
+            fetch(`/hdfs-download-status/?hdfs_path=${encodeURIComponent(hdfsPath)}`)
+                .then(res => res.json())
+                .then(data => {
+                    resultDiv.className = `result ${data.status}`;
+                    resultDiv.innerText = data.msg;
+                    resultDiv.style.display = 'block';
+                })
+                .catch(err => {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerText = '下载完成，但无法获取状态信息';
+                    resultDiv.style.display = 'block';
+                });
+        }, 500);
+    }
+</script>
+{% endblock %}

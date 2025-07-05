@@ -1,0 +1,183 @@
+{% extends "layouts/base.html" %}
+{% load static %}
+{% block title %}图像预处理{% endblock %}
+{% block content %}
+
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold mb-6">图像预处理</h1>
+
+    <!-- 上传表单 -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+        <h2 class="text-xl font-semibold mb-4">上传图片</h2>
+        <input type="file" id="imageUpload" accept="image/*" class="border p-2 rounded w-full">
+    </div>
+
+    <!-- 处理方式选择 -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+        <h2 class="text-xl font-semibold mb-4">选择处理方式</h2>
+        <select id="processingType" class="border p-2 rounded w-full">
+            <option value="resize">调整尺寸(224x224)</option>
+            <option value="grayscale">转为灰度图</option>
+            <option value="blur">高斯模糊</option>
+            <option value="edge">边缘检测</option>
+            <option value="histogram">直方图均衡化</option>
+        </select>
+    </div>
+
+    <!-- 处理结果展示 -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-xl font-semibold mb-4">处理结果</h2>
+        <div id="resultContainer" class="mt-4">
+            <img id="resultImage" class="max-w-full h-auto" >
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function() {
+        // 处理文件上传
+        $('#imageUpload').change(function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const img = new Image();
+                    img.src = event.target.result;
+                    img.onload = function() {
+                        processImage(img);
+                    };
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // 图像处理函数（示例逻辑，实际需后端支持）
+        function processImage(img) {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const processingType = $('#processingType').val();
+
+            // 根据处理类型设置画布尺寸并处理
+            switch(processingType) {
+                case 'grayscale':
+                    // 转为灰度图
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    ctx.drawImage(img, 0, 0);
+                    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    const data = imageData.data;
+                    for (let i = 0; i < data.length; i += 4) {
+                        const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
+                        data[i] = avg;
+                        data[i + 1] = avg;
+                        data[i + 2] = avg;
+                    }
+                    ctx.putImageData(imageData, 0, 0);
+                    break;
+                case 'resize':
+                    // 调整尺寸到224x224
+                    canvas.width = 224;
+                    canvas.height = 224;
+                    ctx.drawImage(img, 0, 0, 224, 224);
+                    break;
+                case 'blur':
+                    // 高斯模糊（使用3x3核）
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    ctx.drawImage(img, 0, 0);
+                    const blurData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    const blurPixels = blurData.data;
+                    const blurredData = new Uint8ClampedArray(blurPixels.length);
+                    const kernel = [1/9, 1/9, 1/9, 1/9, 1/9, 1/9, 1/9, 1/9, 1/9];
+                    for (let y = 1; y < img.height - 1; y++) {
+                        for (let x = 1; x < img.width - 1; x++) {
+                            let sumR = 0, sumG = 0, sumB = 0;
+                            for (let ky = -1; ky <= 1; ky++) {
+                                for (let kx = -1; kx <= 1; kx++) {
+                                    const index = (y + ky) * img.width * 4 + (x + kx) * 4;
+                                    sumR += blurPixels[index] * kernel[(ky + 1) * 3 + (kx + 1)];
+                                    sumG += blurPixels[index + 1] * kernel[(ky + 1) * 3 + (kx + 1)];
+                                    sumB += blurPixels[index + 2] * kernel[(ky + 1) * 3 + (kx + 1)];
+                                }
+                            }
+                            const index = y * img.width * 4 + x * 4;
+                            blurredData[index] = sumR;
+                            blurredData[index + 1] = sumG;
+                            blurredData[index + 2] = sumB;
+                            blurredData[index + 3] = blurPixels[index + 3];
+                        }
+                    }
+                    ctx.putImageData(new ImageData(blurredData, img.width, img.height), 0, 0);
+                    break;
+                case 'edge':
+                    // 边缘检测（Sobel算子）
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    ctx.drawImage(img, 0, 0);
+                    const edgeData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    const edgePixels = edgeData.data;
+                    const edgeResult = new Uint8ClampedArray(edgePixels.length);
+                    const gx = [-1, 0, 1, -2, 0, 2, -1, 0, 1];
+                    const gy = [-1, -2, -1, 0, 0, 0, 1, 2, 1];
+                    for (let y = 1; y < img.height - 1; y++) {
+                        for (let x = 1; x < img.width - 1; x++) {
+                            let sumX = 0, sumY = 0;
+                            for (let ky = -1; ky <= 1; ky++) {
+                                for (let kx = -1; kx <= 1; kx++) {
+                                    const index = (y + ky) * img.width * 4 + (x + kx) * 4;
+                                    const gray = (edgePixels[index] + edgePixels[index + 1] + edgePixels[index + 2]) / 3;
+                                    sumX += gray * gx[(ky + 1) * 3 + (kx + 1)];
+                                    sumY += gray * gy[(ky + 1) * 3 + (kx + 1)];
+                                }
+                            }
+                            const magnitude = Math.sqrt(sumX * sumX + sumY * sumY);
+                            const index = y * img.width * 4 + x * 4;
+                            edgeResult[index] = magnitude;
+                            edgeResult[index + 1] = magnitude;
+                            edgeResult[index + 2] = magnitude;
+                            edgeResult[index + 3] = edgePixels[index + 3];
+                        }
+                    }
+                    ctx.putImageData(new ImageData(edgeResult, img.width, img.height), 0, 0);
+                    break;
+                case 'histogram':
+                    // 直方图均衡化
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    ctx.drawImage(img, 0, 0);
+                    const histData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    const histPixels = histData.data;
+                    const grayValues = new Array(256).fill(0);
+                    // 计算灰度分布
+                    for (let i = 0; i < histPixels.length; i += 4) {
+                        const gray = (histPixels[i] + histPixels[i + 1] + histPixels[i + 2]) / 3;
+                        grayValues[Math.round(gray)]++;
+                    }
+                    // 计算累积分布
+                    const totalPixels = histPixels.length / 4;
+                    let cumulative = 0;
+                    const lookup = new Array(256);
+                    for (let i = 0; i < 256; i++) {
+                        cumulative += grayValues[i];
+                        lookup[i] = Math.round((cumulative / totalPixels) * 255);
+                    }
+                    // 应用均衡化
+                    for (let i = 0; i < histPixels.length; i += 4) {
+                        const gray = (histPixels[i] + histPixels[i + 1] + histPixels[i + 2]) / 3;
+                        const newGray = lookup[Math.round(gray)];
+                        histPixels[i] = newGray;
+                        histPixels[i + 1] = newGray;
+                        histPixels[i + 2] = newGray;
+                    }
+                    ctx.putImageData(histData, 0, 0);
+                    break;
+            }
+
+            // 显示结果
+            $('#resultImage').attr('src', canvas.toDataURL('image/png'));
+            $('#resultContainer').show();
+        }
+    });
+</script>
+{% endblock %}

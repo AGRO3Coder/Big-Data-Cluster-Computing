@@ -1,0 +1,26 @@
+{% extends "layouts/base-fullscreen.html" %}
+{% block title %}资源错误{% endblock %}
+{% block content %}
+    <main>
+        <section class="vh-100 d-flex align-items-center justify-content-center">
+            <div class="container" style="transform: scale(1.5);">
+                <div class="row align-items-center ">
+                    <div class="order-1 text-center d-flex align-items-center justify-content-center">
+                        <img style="width: 15%; height: 20%; margin-bottom: 2.5%" src="{{ config.ASSETS_ROOT }}/img/svg/error-svgrepo-com.svg">
+                    </div>
+                    <div class="order-2 order-lg-1 text-center text-lg-left">
+                        <h1 class="c1 mt-5">数据或资源<span class="text-primary">丢失</span></h1>
+                        <p class="c1 lead my-4">资源丢失,请尝试刷新或者联系我们</p>
+                        <a href="{{ url_for('authentication_blueprint.login') }}" class="btn btn-gray-800 d-inline-flex align-items-center justify-content-center mb-4">
+                            <img class="filter-white icon icon-xs me-2" src="{{ config.ASSETS_ROOT }}/img/svg/lef-arrow.svg">
+                            回到登录
+                        </a>
+                        <a href="https://it.bjfu.edu.cn/" class="btn btn-gray-800 d-inline-flex align-items-center justify-content-center mb-4">
+                            联系我们
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+{% endblock content %}

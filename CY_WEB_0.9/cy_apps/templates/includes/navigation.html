@@ -1,0 +1,264 @@
+<style>
+    /* 1. 基础样式 */
+    button.icon-btn {
+        padding: 4px;
+        background: transparent;
+        border: none;
+        border-radius: 4px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: background-color .2s;
+    }
+
+    /* 2. hover 效果 — 更高优先级 + !important */
+    button.icon-btn:not(.no-hover):hover {
+        background-color: rgba(0, 0, 0, 0.05) !important;
+    }
+
+    /* 3. 取消 focus / active 高亮 */
+    button.icon-btn:focus,
+    button.icon-btn:focus-visible,
+    button.icon-btn:active {
+        outline: none !important;
+        box-shadow: none !important;
+        background-color: transparent !important;
+    }
+
+    /* 4. 点击后锁定无 hover */
+    button.icon-btn.no-hover {
+        background-color: transparent !important;
+        cursor: default;
+    }
+
+    /* 5. 图标大小 */
+    button.icon-btn img {
+        display: block;
+        width: 24px;
+        height: 24px;
+        object-fit: contain;
+    }
+
+    /* 容器水平居中对齐，项目间距 1rem */
+    .nav-container {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 0.5rem;
+    }
+
+    /* 搜索框 wrapper，方便定位图标 */
+    .search-wrapper {
+        position: relative;
+    }
+
+    /* 输入框基础样式 */
+    .search-input {
+        padding: 0.5rem 1rem 0.5rem 2.5rem;
+        border: 1px solid #d1d5db; /* gray-300 */
+        border-radius: 9999px; /* pill 形状 */
+        background-color: #f3f4f6; /* gray-100 */
+        font-size: 0.875rem; /* text-sm */
+        outline: none;
+        transition: box-shadow .2s;
+        width: 12rem; /* 192px, 类似 w-48 */
+    }
+
+    /* 响应式：屏幕宽度 ≥1024px 时加宽到 16rem */
+    @media (min-width: 1024px) {
+        .search-input {
+            width: 16rem;
+        }
+
+        /* 类似 lg:w-64 */
+    }
+
+    /* 输入框聚焦时的阴影效果 */
+    .search-input:focus {
+        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3); /* blue-500/30 */
+    }
+
+    /* 搜索图标 */
+    .icon-search {
+        position: absolute;
+        left: 0.75rem;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 1rem; /* 16px */
+        color: #9ca3af; /* gray-400 */
+        pointer-events: none;
+    }
+
+    /* 图标按钮（铃铛等） */
+    .icon-button {
+        padding: 0.5rem;
+        border: none;
+        background: transparent;
+        border-radius: 9999px;
+        cursor: pointer;
+        transition: background-color .2s;
+    }
+
+
+    .icon-button i {
+        font-size: 1rem;
+        color: #4b5563; /* gray-600 */
+    }
+
+    /* 用户区域 */
+    .user-menu {
+        position: relative;
+    }
+
+    .user-menu button {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.25rem;
+        border: none;
+        background: transparent;
+        cursor: pointer;
+    }
+
+    /* 头像 */
+    .user-menu .avatar {
+        width: 2rem; /* 32px */
+        height: 2rem;
+        border-radius: 9999px;
+        object-fit: cover;
+    }
+
+    /* 用户名初始隐藏，小屏不显示 */
+    .user-menu .username {
+        display: none;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #111827; /* gray-900 */
+    }
+
+    /* 屏幕宽度 ≥768px 时显示用户名 */
+    @media (min-width: 768px) {
+        .user-menu .username {
+            display: inline;
+        }
+    }
+
+    /* 下拉箭头 */
+    .user-menu .icon-down {
+        font-size: 0.75rem; /* 12px */
+        color: #6b7280; /* gray-500 */
+    }
+
+    .icon-bell-xl {
+        font-size: 3rem;
+    }
+</style>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" rel="stylesheet">
+
+<nav class="navbar navbar-top navbar-expand navbar-dashboard navbar-dark ps-0 pe-2 pb-0">
+    <div class="container-fluid px-0">
+        <div class="d-flex justify-content-between w-100" id="navbarSupportedContent">
+            <div class="d-flex align-items-center">
+                {#                <button#}
+                {#                        id="toggle-sidebar-btn"#}
+                {#                        type="button" class="" style="margin-right: 5%">#}
+                {#                    全屏#}
+                {#                </button>#}
+                <button id="toggle-sidebar-btn" type="button" class="btn icon-btn">
+                    <img
+                            id="toggle-sidebar-icon"
+                            src="{{ config.ASSETS_ROOT }}/img/svg/fullscreen.svg"
+                            alt="全屏"
+                            width="24"
+                            height="24"
+                    />
+                </button>
+
+            </div>
+
+            <ul class="navbar-nav align-items-center">
+                <div class="nav-container">
+                    <!-- 搜索 -->
+                    <div class="search-wrapper">
+                        <input type="text" class="search-input" placeholder="搜索...">
+                        <i class="fa-solid fa-search icon-search"></i>
+                    </div>
+
+                    <!-- 铃铛 -->
+
+
+                    <li class="nav-item dropdown">
+                        <a class="nav-link text-dark notification-bell unread dropdown-toggle"
+                           data-unread-notifications="true" href="#" role="button" data-bs-toggle="dropdown"
+                           data-bs-display="static" aria-expanded="false">
+                            <button class="icon-button">
+                                <i class="fa-regular fa-bell"></i>
+                            </button>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-lg dropdown-menu-center mt-2 py-0">
+                            <div class="list-group list-group-flush">
+                                <a href="#" class="text-center text-primary fw-bold border-bottom border-light py-3">Notifications</a>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="nav-item dropdown ms-lg-3">
+                        <a class="nav-link dropdown-toggle pt-1 px-0" href="#" role="button" data-bs-toggle="dropdown"
+                           aria-expanded="false">
+                            <div class="media d-flex align-items-center">
+{#                                <img class="avatar rounded-circle"#}
+{#                                     style="border:2px solid #ccc; box-shadow:0 0 4px rgba(0,0,0,0.1);"#}
+{#                                     src="{{ config.ASSETS_ROOT }}/img/svg/person.svg">#}
+                                <button class="icon-button">
+                                    <i class="fa-regular fa-user"></i>
+                                </button>
+                                <div class="ms-2 text-dark align-items-center d-none d-lg-block">
+                                <span class="username mb-0">
+                                  用户名: <strong>{{ current_user.username }}</strong>
+                                </span>
+                                    <i class="fa-solid fa-chevron-down icon-down mb-0 me-2"></i>
+                                </div>
+                            </div>
+                        </a>
+                        <div class="dropdown-menu dashboard-dropdown dropdown-menu-end mt-2 py-1">
+                            <a class="dropdown-item d-flex align-items-center" href="/settings.html">
+                                <img class="dropdown-icon me-2"
+                                     src="{{ config.ASSETS_ROOT }}/img/svg/person-circle.svg">个人简介
+                            </a>
+                            <a class="dropdown-item d-flex align-items-center" href="/settings.html">
+                                <img class="dropdown-icon me-2" src="{{ config.ASSETS_ROOT }}/img/svg/gear.svg">设置
+                            </a>
+                            <a class="dropdown-item d-flex align-items-center" href="#">
+                                <svg class="dropdown-icon me-2" fill="currentColor" viewBox="0 0 20 20"
+                                     xmlns="http://www.w3.org/2000/svg">
+                                    <path fill-rule="evenodd"
+                                          d="M5 3a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2V5a2 2 0 00-2-2H5zm0 2h10v7h-2l-1 2H8l-1-2H5V5z"
+                                          clip-rule="evenodd"></path>
+                                </svg>
+                                Messages
+                            </a>
+                            <a class="dropdown-item d-flex align-items-center" href="#">
+                                <svg class="dropdown-icon me-2" fill="currentColor" viewBox="0 0 20 20"
+                                     xmlns="http://www.w3.org/2000/svg">
+                                    <path fill-rule="evenodd"
+                                          d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-2 0c0 .993-.241 1.929-.668 2.754l-1.524-1.525a3.997 3.997 0 00.078-2.183l1.562-1.562C15.802 8.249 16 9.1 16 10zm-5.165 3.913l1.58 1.58A5.98 5.98 0 0110 16a5.976 5.976 0 01-2.516-.552l1.562-1.562a4.006 4.006 0 001.789.027zm-4.677-2.796a4.002 4.002 0 01-.041-2.08l-.08.08-1.53-1.533A5.98 5.98 0 004 10c0 .954.223 1.856.619 2.657l1.54-1.54zm1.088-6.45A5.974 5.974 0 0110 4c.954 0 1.856.223 2.657.619l-1.54 1.54a4.002 4.002 0 00-2.346.033L7.246 4.668zM12 10a2 2 0 11-4 0 2 2 0 014 0z"
+                                          clip-rule="evenodd"></path>
+                                </svg>
+                                Support
+                            </a>
+                            <div role="separator" class="dropdown-divider my-1"></div>
+{#                            <a class="dropdown-item d-flex align-items-center"#}
+{#                               href="{{ url_for('authentication_blueprint.logout') }}">#}
+{#                                <svg class="dropdown-icon text-danger me-2" fill="none" stroke="currentColor"#}
+{#                                     viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">#}
+{#                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"#}
+{#                                          d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>#}
+{#                                </svg>#}
+{#                                Logout#}
+{#                            </a>#}
+                        </div>
+                    </li>
+                </div>
+            </ul>
+        </div>
+    </div>
+</nav>

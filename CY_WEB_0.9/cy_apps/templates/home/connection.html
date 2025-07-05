@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>连接HDFS集群</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "微软雅黑", sans-serif;
+        }
+
+        body {
+            background-color: #f8f9fc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* 容器卡片 */
+        .connect-container {
+            width: 500px;
+            background-color: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        /* 顶部蓝色标题栏 */
+        .connect-header {
+            background-color: #2e85f3;
+            color: #fff;
+            text-align: center;
+            padding: 24px;
+        }
+
+        .connect-header h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .connect-header p {
+            margin-top: 8px;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        /* 中间内容区域 */
+        .connect-content {
+            text-align: center;
+            padding: 32px;
+        }
+
+        .connect-content .icon {
+            font-size: 48px;
+            color: #2e85f3;
+            margin-bottom: 16px;
+            display: block;
+        }
+
+        .connect-content p {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 24px;
+            line-height: 1.4;
+        }
+
+        /* 按钮样式 */
+        .btn-connect {
+            padding: 12px 36px;
+            background-color: #2e85f3;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn-connect:hover {
+            background-color: #1c71d8;
+        }
+
+        /* 响应式适配 */
+        @media (max-width: 540px) {
+            .connect-container {
+                width: 90%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="connect-container">
+        <!-- 顶部标题栏 -->
+        <div class="connect-header">
+            <h1>连接HDFS集群</h1>
+            <p>测试与HDFS集群的连接状态</p>
+        </div>
+        <!-- 中间内容区 -->
+        <div class="connect-content">
+            <span class="icon">☁️</span> <!-- 可用实际图标替换 -->
+            <p>点击下方按钮，测试当前配置的HDFS集群连接</p>
+            <button class="btn-connect" onclick="testConnection()">连接测试</button>
+            <!-- 结果提示（默认隐藏） -->
+            <div id="result" style="margin-top: 24px; display: none;"></div>
+        </div>
+    </div>
+
+    <!-- 接口调用逻辑 -->
+    <script>
+        function testConnection() {
+            // 显示加载状态
+            document.getElementById('result').style.display = 'block';
+            document.getElementById('result').innerHTML = '<p style="color: #666;">正在测试连接...</p>';
+
+            // 调用后端连接测试接口（需与 Django 路由对应）
+            fetch('/hdfs/test-connection/')
+                .then(response => response.json())
+                .then(data => {
+                    const resultDiv = document.getElementById('result');
+                    if (data.success) {
+                        resultDiv.innerHTML = '<p style="color: green;">连接成功！</p>';
+                    } else {
+                        resultDiv.innerHTML = `<p style="color: red;">连接失败：${data.message}</p>`;
+                    }
+                })
+                .catch(error => {
+                    document.getElementById('result').innerHTML = `<p style="color: red;">请求异常：${error}</p>`;
+                });
+        }
+    </script>
+</body>
+</html>

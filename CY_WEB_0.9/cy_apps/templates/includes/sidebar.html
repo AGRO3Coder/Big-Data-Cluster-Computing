@@ -1,0 +1,292 @@
+<link type="text/css" href="{{ config.ASSETS_ROOT }}/css/sidebar.css" rel="stylesheet">
+<nav class="navbar navbar-dark navbar-theme-primary px-4 col-12 d-lg-none">
+    <a class="navbar-brand me-lg-5" href="/">
+        <img class="navbar-brand-light" src="{{ config.ASSETS_ROOT }}/img/svg/bjfu.svg"/>
+    </a>
+    <div class="d-flex align-items-center">
+        <button class="navbar-toggler d-lg-none collapsed" type="button" data-bs-toggle="collapse"
+                data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false"
+                aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+    </div>
+</nav>
+<nav id="sidebarMenu" class="sidebar d-lg-block bg-gray-800 text-white collapse" data-simplebar>
+    <div class="sidebar-inner px-4 pt-3">
+        <div class="user-card d-flex d-md-none align-items-center justify-content-between justify-content-md-center pb-4">
+            <div class="d-flex align-items-center">
+                <div class="avatar-lg me-4" style="margin-bottom: 5px">
+                    <img src="{{ config.ASSETS_ROOT }}/img/svg/bjfu.svg"
+                         class="card-img-top rounded-circle border-white" alt="BJFU logo">
+                </div>
+                <div class="d-block">
+                    <h2 class="h5 mb-0" style="color: white; font-weight: bolder">Beijing Forestry University</h2>
+                </div>
+            </div>
+            <div class="collapse-close d-md-none">
+                <a href="#sidebarMenu" data-bs-toggle="collapse"
+                   data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="true"
+                   aria-label="Toggle navigation">
+                    <svg class="icon icon-xs" fill="currentColor" viewBox="0 0 20 20"
+                         xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd"
+                              d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                              clip-rule="evenodd"></path>
+                    </svg>
+                </a>
+            </div>
+        </div>
+        <ul class="nav flex-column pt-3 pt-md-0">
+            <li class="nav-item">
+                <a href="/" class="nav-link d-flex align-items-center">
+                    <span class="sidebar-text" style="font-weight: bold; font-size: 20px;">BJFU-实时疫情智库</span>
+                </a>
+            </li>
+            <li class="nav-item {% if 'main_board' in segment %} active {% endif %}">
+                <a href="/main_board" class="nav-link">
+                  <span class="sidebar-icon">
+                      <img class="fy icon icon-xs me-2" src="{{ config.ASSETS_ROOT }}/img/svg/speedometer.svg">
+                  </span>
+                    <span class="sidebar-text">国内外疫情总览</span>
+                </a>
+            </li>
+
+            <li class="nav-item {% if 'display_' in segment %} active {% endif %}">
+                <span
+                        class="nav-link  collapsed  d-flex justify-content-between align-items-center"
+                        data-bs-toggle="collapse" data-bs-target="#submenu-components">
+                  <span>
+                    <span class="sidebar-icon">
+                        <img class="fy icon icon-xs me-2"
+                             src="{{ config.ASSETS_ROOT }}/img/svg/globe-asia-australia.svg">
+                    </span>
+                    <span class="sidebar-text">实时疫情展示</span>
+                  </span>
+                  <span class="link-arrow">
+                    <svg class="icon icon-sm" fill="currentColor" viewBox="0 0 20 20"
+                         xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd"
+                                                                  d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                                                                  clip-rule="evenodd"></path></svg>
+                  </span>
+                </span>
+                <div class="multi-level collapse {% if 'display_' in segment %} show {% endif %}" role="list"
+                     id="submenu-components" aria-expanded="false">
+                    <ul class="flex-column nav">
+                        <li class="nav-item {% if 'display_china' in segment %} active {% endif %}">
+                            <a class="nav-link" href="/display/display_china">
+                                <span class="sidebar-text">国内疫情概况</span>
+                            </a>
+                        </li>
+                        <li class="nav-item {% if 'display_globe' in segment %} active {% endif %}">
+                            <a class="nav-link" href="/display/display_globe">
+                                <span class="sidebar-text">全球疫情概况</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+            </li>
+            <li class="nav-item {% if 'search_' in segment %} active {% endif %}">
+                <span
+                        class="nav-link  collapsed  d-flex justify-content-between align-items-center"
+                        data-bs-toggle="collapse" data-bs-target="#submenu-components_1">
+                  <span>
+                    <span class="sidebar-icon">
+                        <img class="fy icon icon-xs me-2"
+                             src="{{ config.ASSETS_ROOT }}/img/svg/search.svg">
+                    </span>
+                    <span class="sidebar-text">智库查询系统</span>
+                  </span>
+                  <span class="link-arrow">
+                    <svg class="icon icon-sm" fill="currentColor" viewBox="0 0 20 20"
+                         xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd"
+                                                                  d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                                                                  clip-rule="evenodd"></path></svg>
+                  </span>
+                </span>
+                <div class="multi-level collapse {% if 'search_' in segment %} show {% endif %}" role="list"
+                     id="submenu-components_1" aria-expanded="false">
+                    <ul class="flex-column nav">
+                        <li class="nav-item {% if 'search_user' in segment %} active {% endif %}">
+                            <a class="nav-link" href="/search/search_user">
+                                <span class="sidebar-text">自定义可视化查询</span>
+                            </a>
+                        </li>
+                        <li class="nav-item {% if 'search_2' in segment %} active {% endif %}">
+                            <a class="nav-link" href="/search/search_2">
+                                <span class="sidebar-text">统计学多维度查询</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+            </li>
+
+            <li class="nav-item {% if 'predict_' in segment %} active {% endif %}">
+                <span
+                        class="nav-link  collapsed  d-flex justify-content-between align-items-center"
+                        data-bs-toggle="collapse" data-bs-target="#submenu_predict">
+                  <span>
+                    <span class="sidebar-icon">
+                      <img class="fy icon icon-xs me-2" src="{{ config.ASSETS_ROOT }}/img/svg/bar-chart-steps.svg">
+                    </span>
+                    <span class="sidebar-text">趋势预测分析</span>
+                  </span>
+                  <span class="link-arrow">
+                    <svg class="icon icon-sm" fill="currentColor" viewBox="0 0 20 20"
+                         xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd"
+                                                                  d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                                                                  clip-rule="evenodd"></path></svg>
+                  </span>
+                </span>
+                <div class="multi-level collapse {% if 'predict_' in segment %} show {% endif %}"
+                     role="list" id="submenu_predict" aria-expanded="false">
+                    <ul class="flex-column nav">
+                        <li class="nav-item {% if 'predict_main' in segment %} active {% endif %}">
+                            <a class="nav-link" href="/predict/predict_main.html">
+                                <span class="sidebar-text">疫情预测</span>
+                            </a>
+                        </li>
+                        <li class="nav-item {% if 'predict_spread' in segment %} active {% endif %}">
+                            <a class="nav-link" href="/predict/predict_spread.html">
+                                <span class="sidebar-text">疫情传播模式</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
+            <li class="nav-item {% if 'user_' in segment %} active {% endif %}">
+                <span
+                        class="nav-link  collapsed  d-flex justify-content-between align-items-center"
+                        data-bs-toggle="collapse" data-bs-target="#submenu_user">
+                  <span>
+                    <span class="sidebar-icon">
+                      <img class="fy icon icon-xs me-2" src="{{ config.ASSETS_ROOT }}/img/svg/person-bounding-box.svg">
+                    </span>
+                    <span class="sidebar-text">用户中心</span>
+                  </span>
+                  <span class="link-arrow">
+                    <svg class="icon icon-sm" fill="currentColor" viewBox="0 0 20 20"
+                         xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd"
+                                                                  d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                                                                  clip-rule="evenodd"></path></svg>
+                  </span>
+                </span>
+                <div class="multi-level collapse {% if 'user_' in segment %} show {% endif %}"
+                     role="list" id="submenu_user" aria-expanded="false">
+                    <ul class="flex-column nav">
+                        <li class="nav-item {% if 'user_history' in segment %} active {% endif %}">
+                            <a class="nav-link" href="/user/user_history">
+                                <span class="sidebar-text">历史查询记录</span>
+                            </a>
+                        </li>
+                        <li class="nav-item {% if 'user_info' in segment %} active {% endif %}">
+                            <a class="nav-link" href="/user/user_info">
+                                <span class="sidebar-text">用户通知</span>
+                            </a>
+                        </li>
+                        <li class="nav-item {% if 'user_setting' in segment %} active {% endif %}">
+                            <a class="nav-link" href="/user/user_setting">
+                                <span class="sidebar-text">用户信息设置</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
+            <li class="nav-item {% if 'interface' in segment %} active {% endif %}">
+                <a href="/interface" class="nav-link">
+                  <span class="sidebar-icon">
+                      <img class="fy icon icon-xs me-2" src="{{ config.ASSETS_ROOT }}/img/svg/cloud-haze2.svg">
+                  </span>
+                    <span class="sidebar-text">后台总览</span>
+                </a>
+            </li>
+            <li class="nav-item {% if 'settings' in segment %} active {% endif %}">
+                <a href="/settings.html" class="nav-link">
+                 <span class="sidebar-icon">
+                     <img class="fy icon icon-xs me-2" src="{{ config.ASSETS_ROOT }}/img/svg/gear.svg">
+                 </span>
+                    <span class="sidebar-text">设置</span>
+                </a>
+            </li>
+            <li class="nav-item {% if 'page-' in segment %} active {% endif %}">
+                 <span
+                         class="nav-link  collapsed  d-flex justify-content-between align-items-center"
+                         data-bs-toggle="collapse" data-bs-target="#submenu-pages">
+                  <span>
+                    <span class="sidebar-icon">
+                        <img class="fy icon icon-xs me-2" src="{{ config.ASSETS_ROOT }}/img/svg/folder-symlink.svg">
+                    </span>
+                    <span class="sidebar-text">页面跳转</span>
+                  </span>
+                  <span class="link-arrow">
+                    <svg class="icon icon-sm" fill="currentColor" viewBox="0 0 20 20"
+                         xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd"
+                                                                  d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                                                                  clip-rule="evenodd"></path></svg>
+                  </span>
+                </span>
+                <div class="multi-level collapse {% if 'page-' in segment %} show {% endif %} " role="list"
+                     id="submenu-pages" aria-expanded="false">
+                    <ul class="flex-column nav">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/main_board">
+                                <span class="sidebar-text">主页</span>
+                            </a>
+                        </li>
+{#                        <li class="nav-item">#}
+{#                            <a class="nav-link" href="{{ url_for('authentication_blueprint.logout_to_login') }}">#}
+{#                                <span class="sidebar-text">登录界面</span>#}
+{#                            </a>#}
+{#                        </li>#}
+{#                        <li class="nav-item">#}
+{#                            <a class="nav-link" href="{{ url_for('authentication_blueprint.logout_to_register') }}">#}
+{#                                <span class="sidebar-text">注册界面</span>#}
+{#                            </a>#}
+{#                        </li>#}
+                        <li class="nav-item">
+                            <a class="nav-link" href="/notcomplete">
+                                <span class="sidebar-text">重置密码</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/403or404">
+                                <span class="sidebar-text">访问错误</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/500">
+                                <span class="sidebar-text">资源获取错误</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/notcomplete">
+                                <span class="sidebar-text">锁屏</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/notcomplete">
+                                <span class="sidebar-text">占位页面</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
+            <li role="separator" class="dropdown-divider mt-4 mb-3 border-gray-700"></li>
+            <li class="nav-item">
+{#                <a href="{{ url_for('authentication_blueprint.logout') }}" class="nav-link">#}
+{#                    <span class="sidebar-icon">#}
+{#                        <img class="fy icon icon-xs me-2" src="{{ config.ASSETS_ROOT }}/img/svg/box-arrow-right.svg">#}
+{#                    </span>#}
+{#                    <span class="sidebar-text">登出</span>#}
+{#                </a>#}
+            </li>
+            <li class="last-item">
+                <a target="_blank" href="https://it.bjfu.edu.cn/"
+                   class="btn btn-secondary d-flex align-items-center justify-content-center btn-upgrade-pro"><span>北京林业大学-信息学院</span></a>
+            </li>
+        </ul>
+    </div>
+</nav>
+
+

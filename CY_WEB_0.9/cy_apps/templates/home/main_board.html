@@ -1,0 +1,248 @@
+{% extends "layouts/base.html" %}
+{% load static %}  {# 加载静态文件标签，放在模板文件开头合适位置 #}
+{#{% block title %} {% endblock %}#}
+{% block content %}
+    <!-- 英雄区域 -->
+
+    <section class="relative bg-primary py-16 md:py-24 overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-r from-primary to-secondary opacity-80"></div>
+        <div class="container mx-auto px-4 relative z-10">
+            <div class="max-w-3xl mx-auto text-center">
+                <h1 class="text-[clamp(2rem,5vw,3.5rem)] font-bold text-white mb-6">保护野生动物，智能识别助力</h1>
+                <p class="text-[clamp(1rem,2vw,1.25rem)] text-light mb-8">
+                    智能识别，为野生动物保护贡献力量，共建生态平衡</p>
+                <div class="flex flex-wrap justify-center gap-4">
+                    <a href="#" class="btn-primary">
+                        <i class="fa fa-globe mr-2"></i> 了解我们的工作
+                    </a>
+                    <a href="#"
+                       class="bg-white hover:bg-gray-100 text-primary font-medium py-2 px-4 rounded transition-colors duration-300">
+                        <i class="fa fa-newspaper-o mr-2"></i> 最新新闻
+                    </a>
+                </div>
+            </div>
+        </div>
+        <!-- 装饰元素 -->
+        <div class="absolute bottom-0 left-0 w-full h-16 bg-gradient-to-t from-neutral to-transparent"></div>
+    </section>
+    <div class="px-8">
+        <!-- 最新焦点 -->
+        <section class="mb-16">
+            <h2 class="text-[clamp(1.5rem,3vw,2rem)] font-bold text-gray-800 mb-8 text-center">动物世界焦点</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- 卡片1：濒危动物保护 -->
+                <article
+                        class="bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300 hover:shadow-lg card-hover">
+                    <div class="h-48 overflow-hidden">
+                        <img src="{% static 'assets/will/img/jpg/1.png' %}" alt="森林濒危动物"
+                             class="w-full h-full object-cover transition-transform duration-500 hover:scale-110">
+                    </div>
+                    <div class="p-6">
+                        <span class="inline-block text-xs font-semibold text-white bg-red-500 px-2 py-1 rounded-full mb-3">濒危物种</span>
+                        <h3 class="text-xl font-semibold mt-3 mb-2">全球森林濒危动物保护新举措</h3>
+                        <p class="text-gray-600 mb-4">
+                            联合国环境规划署联合WWF启动"森林守护者"计划，针对东北虎、金丝猴等15种林栖物种建立跨国监测网络，中国境内朱鹮种群已恢复至5000只以上。
+                        </p>
+                        <a href="#"
+                           class="text-red-500 font-medium hover:text-red-700 transition-colors flex items-center">
+                            查看保护案例 <i class="fa fa-long-arrow-right ml-2 text-sm"></i>
+                        </a>
+                    </div>
+                </article>
+
+                <!-- 卡片2：反盗猎行动 -->
+                <article
+                        class="bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300 hover:shadow-lg card-hover">
+                    <div class="h-48 overflow-hidden">
+                        <img src="{% static 'assets/will/img/jpg/2.png' %}" alt="反盗猎行动"
+                             class="w-full h-full object-cover transition-transform duration-500 hover:scale-110">
+                    </div>
+                    <div class="p-6">
+                        <span class="inline-block text-xs font-semibold text-white bg-green-600 px-2 py-1 rounded-full mb-3">反盗猎监测</span>
+                        <h3 class="text-xl font-semibold mt-3 mb-2">非洲象群智能防偷猎系统启用</h3>
+                        <p class="text-gray-600 mb-4">
+                            国际爱护动物基金会部署AI卫星项圈，实时监测5000头非洲象迁徙轨迹，结合无人机巡逻使盗猎事件同比下降62%，象牙走私量减少40吨。
+                        </p>
+                        <a href="#"
+                           class="text-green-600 font-medium hover:text-green-800 transition-colors flex items-center">
+                            追踪保护进展 <i class="fa fa-long-arrow-right ml-2 text-sm"></i>
+                        </a>
+                    </div>
+                </article>
+
+                <!-- 卡片3：城市动物生态 -->
+                <article
+                        class="bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300 hover:shadow-lg card-hover">
+                    <div class="h-48 overflow-hidden">
+                        <img src="{% static 'assets/will/img/jpg/3.png' %}" alt="城市动物"
+                             class="w-full h-full object-cover transition-transform duration-500 hover:scale-110">
+                    </div>
+                    <div class="p-6">
+                        <span class="inline-block text-xs font-semibold text-white bg-purple-500 px-2 py-1 rounded-full mb-3">城市生态</span>
+                        <h3 class="text-xl font-semibold mt-3 mb-2">全球城市野生动物生存报告</h3>
+                        <p class="text-gray-600 mb-4">
+                            最新研究发现，全球50大城市中，红狐、赤狐等动物已进化出适应城市光污染的生理特性，东京乌鸦种群学会利用交通信号灯破解坚果外壳。
+                        </p>
+                        <a href="#"
+                           class="text-purple-500 font-medium hover:text-purple-700 transition-colors flex items-center">
+                            阅读生态研究 <i class="fa fa-long-arrow-right ml-2 text-sm"></i>
+                        </a>
+                    </div>
+                </article>
+            </div>
+        </section>
+
+        <!-- 关键数据 -->
+        <section class="mb-16 bg-primary text-white py-12 rounded-xl">
+            <div class="container mx-auto px-4">
+                <h2 class="text-[clamp(1.5rem,3vw,2rem)] font-bold mb-8 text-center">关键全球野生动物保护数据</h2>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                    <div class="text-center p-4">
+                        <div class="text-4xl md:text-5xl font-bold mb-2">63,000+</div>
+                        <p class="text-light">野生动物物种</p>
+                    </div>
+                    <div class="text-center p-4">
+                        <div class="text-4xl md:text-5xl font-bold mb-2">980</div>
+                        <p class="text-light">国家重点保护物种</p>
+                    </div>
+                    <div class="text-center p-4">
+                        <div class="text-4xl md:text-5xl font-bold mb-2">70%</div>
+                        <p class="text-light">物种面临威胁</p>
+                    </div>
+                    <div class="text-center p-4">
+                        <div class="text-4xl md:text-5xl font-bold mb-2">1,000+</div>
+                        <p class="text-light">动物保护组织</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <section class="mb-16">
+            <h2 class="text-[clamp(1.5rem,3vw,2rem)] font-bold text-gray-800 mb-8 text-center">主要功能</h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <a href="{% url 'cluster_connection' %}"
+                   class="bg-white rounded-lg shadow-sm p-6 text-center card-hover">
+                    <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fa fa-server text-primary text-2xl"></i>
+                    </div>
+                    <h3 class="font-semibold text-gray-800 mb-2">连接集群</h3>
+                    <p class="text-sm text-gray-600">查看集群状态（节点数/存储使用率/连接状态）</p>
+                </a>
+
+                <a href="{% url 'upload' %}" class="bg-white rounded-lg shadow-sm p-6 text-center card-hover">
+                    <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fa fa-upload text-primary text-2xl"></i>
+                    </div>
+                    <h3 class="font-semibold text-gray-800 mb-2">文件上传</h3>
+                    <p class="text-sm text-gray-600">基于大数据集群环境的文件上传功能</p>
+                </a>
+
+                <a href="{% url 'browse' %}" class="bg-white rounded-lg shadow-sm p-6 text-center card-hover">
+                    <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fa fa-folder-open text-primary text-2xl"></i></div>
+                    <h3 class="font-semibold text-gray-800 mb-2">浏览文件</h3>
+                    <p class="text-sm text-gray-600">基于大数据集群环境的文件浏览功能</p>
+                </a>
+
+                <a href="{% url 'image_preprocessing' %}"
+                   class="bg-white rounded-lg shadow-sm p-6 text-center card-hover">
+                    <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fa fa-image text-primary text-2xl"></i>
+                    </div>
+                    <h3 class="font-semibold text-gray-800 mb-2">图像预处理</h3>
+                    <p class="text-sm text-gray-600">上传图片并选择处理方式（如灰度化、缩放等）</p>
+                </a>
+
+                <a href="{% url 'hdfs_statistics' %}" class="bg-white rounded-lg shadow-sm p-6 text-center card-hover">
+                    <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fa fa-folder text-primary text-2xl"></i>
+                    </div>
+                    <h3 class="font-semibold text-gray-800 mb-2">HDFS文件展示</h3>
+                    <p class="text-sm text-gray-600">HDFS文件类型统计图表展示（折线图/饼图/点状图/条形图）</p>
+                </a>
+
+                <a href="{% url 'hdfs_download' %}" class="bg-white rounded-lg shadow-sm p-6 text-center card-hover">
+                    <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fa fa-download text-primary text-2xl"></i>
+                    </div>
+                    <h3 class="font-semibold text-gray-800 mb-2">HDFS文件下载</h3>
+                    <p class="text-sm text-gray-600">下载HDFS上的文件</p>
+                </a>
+
+                <a href="{% url 'detect' %}" class="bg-white rounded-lg shadow-sm p-6 text-center card-hover">
+                    <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fa fa-search text-primary text-2xl"></i>
+                    </div>
+                    <h3 class="font-semibold text-gray-800 mb-2">野生动物目标检测</h3>
+                    <p class="text-sm text-gray-600">使用先进算法自动识别和监测野生动物种群</p>
+                </a>
+
+                <a href="{% url 'profile' %}" class="bg-white rounded-lg shadow-sm p-6 text-center card-hover">
+                    <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fa fa-user text-primary text-2xl"></i>
+                    </div>
+                    <h3 class="font-semibold text-gray-800 mb-2">个人信息管理</h3>
+                    <p class="text-sm text-gray-600">账户资料、隐私设置、数据同步等功能</p>
+                </a>
+            </div>
+        </section>
+
+        <!-- 野生动物保护工作 -->
+        <section class="mb-16">
+            <h2 class="text-[clamp(1.5rem,3vw,2rem)] font-bold text-gray-800 mb-8 text-center">野生动物保护行动</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="bg-white rounded-lg shadow-md overflow-hidden flex flex-col md:flex-row card-hover">
+                    <div class="md:w-1/3 h-48 md:h-auto">
+                        <img src="https://picsum.photos/600/400?random=101" alt="濒危物种保护"
+                             class="w-full h-full object-cover">
+                    </div>
+                    <div class="p-6 md:w-2/3">
+                        <h3 class="text-xl font-semibold mb-3">濒危物种守护</h3>
+                        <p class="text-gray-600 mb-4">
+                            致力于拯救全球濒危野生动物，通过科学研究、栖息地修复和反盗猎行动，守护生物多样性。
+                        </p>
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            <span class="text-xs font-medium bg-light text-primary px-3 py-1 rounded-full">物种监测</span>
+                            <span class="text-xs font-medium bg-light text-primary px-3 py-1 rounded-full">栖息地重建</span>
+                            <span class="text-xs font-medium bg-light text-primary px-3 py-1 rounded-full">反盗猎巡逻</span>
+                        </div>
+                        <a href="#" class="text-primary font-medium hover:text-secondary transition-colors">
+                            了解保护项目 <i class="fa fa-arrow-right ml-1"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-md overflow-hidden flex flex-col md:flex-row card-hover">
+                    <div class="md:w-1/3 h-48 md:h-auto">
+                        <img src="https://picsum.photos/600/400?random=102" alt="人兽冲突缓解"
+                             class="w-full h-full object-cover">
+                    </div>
+                    <div class="p-6 md:w-2/3">
+                        <h3 class="text-xl font-semibold mb-3">人兽和谐共处</h3>
+                        <p class="text-gray-600 mb-4">
+                            推动人类与野生动物的可持续共存，通过社区教育、安全防护措施减少冲突，促进生态平衡。
+                        </p>
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            <span class="text-xs font-medium bg-light text-primary px-3 py-1 rounded-full">社区教育</span>
+                            <span class="text-xs font-medium bg-light text-primary px-3 py-1 rounded-full">防护设施</span>
+                            <span class="text-xs font-medium bg-light text-primary px-3 py-1 rounded-full">迁移通道</span>
+                        </div>
+                        <a href="#" class="text-primary font-medium hover:text-secondary transition-colors">
+                            探索共存方案 <i class="fa fa-arrow-right ml-1"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script>
+            document.getElementById('logoutBtn').addEventListener('click', function () {
+                if (confirm('确定要退出登录吗？')) {
+                    window.location.href = "{% url 'logout' %}";
+                }
+            });
+        </script>
+    </div>
+{% endblock %}

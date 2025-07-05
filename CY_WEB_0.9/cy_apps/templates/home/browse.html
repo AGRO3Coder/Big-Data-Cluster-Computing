@@ -1,0 +1,254 @@
+
+
+
+
+{% extends "layouts/base.html" %}
+{% load static %}
+{% block title %}文件上传到HDFS{% endblock %}
+
+{% block content %}
+    <div class="containe1r">
+        <div class="loading">
+            <span>正在加载HDFS文件列表...</span>
+        </div>
+        <div class="file-list" id="fileList">
+            <div id="pathNav" style="margin-bottom: 16px; color: #666;"></div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block extra_css %}
+        <style>
+        /* 内容容器 */
+        .containe1r {
+            width: 800px;
+            margin: 30px auto;
+            background-color: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        /* 文件列表区域 */
+        .file-list {
+            padding: 24px;
+        }
+
+        .file-list h2 {
+            font-size: 25px;
+            color: #333;
+            margin-bottom: 16px;
+            font-weight: 600;
+        }
+
+        .file-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .file-item span {
+            font-size: 16px;
+            color: #555;
+        }
+
+        .delete-btn {
+            padding: 6px 16px;
+            background-color: #ff4d4f;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .delete-btn:hover {
+            background-color: #ff3838;
+        }
+
+        /* 加载状态提示 */
+        .loading {
+            text-align: center;
+            padding: 24px;
+            color: #999;
+            display: none;
+        }
+
+        /* 响应式适配 */
+        @media (max-width: 900px) {
+            .container {
+                width: 90%;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block extra_js %}
+    <script>
+        // 获取 CSRF Token
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // 全局变量：记录当前浏览的 HDFS 路径
+        let currentHdfsPath = '/';
+
+        // 加载 HDFS 文件列表（支持指定路径）
+        function loadHdfsFiles(targetPath = '/') {
+            currentHdfsPath = targetPath; // 更新当前路径
+            showLoading();
+
+            // 拼接请求 URL，编码特殊字符
+            const requestUrl = `/hdfs/get-files/?path=${encodeURIComponent(targetPath)}`;
+            console.log('请求 HDFS 路径：', requestUrl);
+
+            fetch(requestUrl)
+                .then(response => response.json())
+                .then(data => {
+                    hideLoading();
+                    const fileListDom = document.getElementById('fileList');
+
+                    // 防御：确保 fileList 元素存在
+                    if (!fileListDom) {
+                        console.error('DOM 元素 #fileList 不存在，无法渲染');
+                        return;
+                    }
+
+                    if (data.success && data.files.length > 0) {
+                        renderPathNav(targetPath);   // 渲染路径导航
+                        renderFileList(data.files, targetPath); // 渲染文件列表
+                    } else {
+                        fileListDom.innerHTML = '<p style="color: #999;">当前路径无内容</p>';
+                    }
+                })
+                .catch(error => {
+                    hideLoading();
+                    const fileListDom = document.getElementById('fileList');
+                    if (fileListDom) {
+                        fileListDom.innerHTML = `<p style="color: red;">加载失败：${error}</p>`;
+                    }
+                });
+        }
+
+        // 渲染路径导航（面包屑）
+        function renderPathNav(currentPath) {
+            const pathNavDom = document.getElementById('pathNav');
+            if (!pathNavDom) {
+                console.error('DOM 元素 #pathNav 不存在，无法渲染路径导航');
+                return;
+            }
+
+            const paths = currentPath.split('/').filter(p => p); // 拆分路径片段
+            let navHtml = `<span onclick="loadHdfsFiles('/')">/</span>`;
+            let tempPath = '/';
+
+            paths.forEach(p => {
+                tempPath += `${p}/`;
+                navHtml += ` > <span onclick="loadHdfsFiles('${tempPath}')">${p}</span>`;
+            });
+
+            pathNavDom.innerHTML = navHtml;
+        }
+
+        // 渲染文件列表（区分文件/文件夹）
+        function renderFileList(files, currentPath) {
+            const fileListDom = document.getElementById('fileList');
+            if (!fileListDom) {
+                console.error('DOM 元素 #fileList 不存在，无法渲染文件列表');
+                return;
+            }
+
+            let html = '<h2>HDFS 文件列表</h2>';
+            files.forEach(file => {
+                // 简单判断：无扩展名视为文件夹（可根据后端返回优化）
+                const isDir = file.indexOf('.') === -1;
+                const icon = isDir ? '📁' : '📄';
+
+                html += `
+                    <div class="file-item">
+                        <span style="cursor: pointer;" onclick="${isDir ? `loadHdfsFiles('${currentPath}${file}/')` : ''}">
+                            ${icon} ${file}
+                        </span>
+                        <button class="delete-btn" onclick="deleteFile('${currentPath}${file}')">删除</button>
+                    </div>
+                `;
+            });
+
+            fileListDom.innerHTML = html;
+        }
+
+        // 删除文件/目录
+        function deleteFile(filePath) {
+            if (confirm(`确定要删除文件：${filePath} 吗？`)) {
+                showLoading();
+
+                fetch('/hdfs/delete-file/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        file_path: filePath,
+                        csrfmiddlewaretoken: getCookie('csrftoken')
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    hideLoading();
+                    if (data.success) {
+                        alert('删除成功！');
+                        // 重新加载当前路径
+                        loadHdfsFiles(currentHdfsPath);
+                    } else {
+                        alert(`删除失败：${data.message}`);
+                    }
+                })
+                .catch(error => {
+                    hideLoading();
+                    alert(`请求异常：${error}`);
+                });
+            }
+        }
+
+        // 显示加载状态
+        function showLoading() {
+            const loadingDom = document.querySelector('.loading');
+            const fileListDom = document.getElementById('fileList');
+            if (loadingDom && fileListDom) {
+                loadingDom.style.display = 'block';
+                fileListDom.style.display = 'none';
+            }
+        }
+
+        // 隐藏加载状态
+        function hideLoading() {
+            const loadingDom = document.querySelector('.loading');
+            const fileListDom = document.getElementById('fileList');
+            if (loadingDom && fileListDom) {
+                loadingDom.style.display = 'none';
+                fileListDom.style.display = 'block';
+            }
+        }
+
+        // 页面加载后初始化：加载根路径
+        window.onload = function () {
+            loadHdfsFiles('/');
+        };
+    </script>
+{% endblock %}

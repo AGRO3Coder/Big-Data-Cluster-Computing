@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <link rel="icon" href="{{ config.ASSETS_ROOT }}/img/svg/bjfu.svg">
+    {% block extra_styles %}{% endblock %}
+    <title>
+        {{ config.PLATFORM_NAME }} - {% block title %}{% endblock %}
+    </title>
+    <link type="text/css" href="{{ config.ASSETS_ROOT }}/css/Components.css" rel="stylesheet">
+    <link type="text/css" href="{{ config.ASSETS_ROOT }}/css/Form & Bottom.css" rel="stylesheet">
+</head>
+<body>
+{% block content %}{% endblock content %}
+</body>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const btn = document.getElementById('toggle-sidebar-btn');
+        const sidebar = document.getElementById('app-sidebar');
+        const main = document.getElementById('main-content');
+
+        btn.addEventListener('click', () => {
+            sidebar.classList.toggle('hidden');
+            main.classList.toggle('fullwidth');
+            // 可以顺便切换按钮文字
+
+            btn.textContent = sidebar.classList.contains('hidden') ? '退出全屏' : '全屏';
+            // 触发 resizeCharts 事件
+            setTimeout(() => {
+                console.log('[主页面] dispatch resizeCharts');
+                window.dispatchEvent(new Event('resizeCharts'));
+            }, 350); // 建议延迟 > CSS 过渡时间
+
+        });
+    });
+
+</script>
+<script src="{{ url_for('static', filename='assets/js/echarts.js') }}"></script>
+</html>

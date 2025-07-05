@@ -1,0 +1,77 @@
+<!-- templates/accounts/register.html -->
+{% extends "layouts/base.html" %}
+{% load static %}
+{% load custom_filters %}
+
+{% block title %} 注册 - 世界卫生组织 {% endblock %}
+
+{% block content %}
+<section class="min-h-screen bg-neutral flex items-center justify-center">
+    <div class="container mx-auto px-4 md:px-8 lg:px-10">
+        <div class="max-w-xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
+            <div class="bg-primary p-8">
+                <h2 class="text-3xl font-bold text-white text-center">用户注册</h2>
+            </div>
+            <div class="px-14 py-8">
+                <!-- 消息提示 -->
+                {% if messages %}
+                    <div class="mb-4">
+                        {% for message in messages %}
+                            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                                <strong>{{ message }}</strong>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <form method="post" class="space-y-5">
+                    {% csrf_token %}
+                    <div>
+                        <label for="{{ form.username.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">用户名</label>
+                        {{ form.username|add_class:"w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" }}
+                    </div>
+                    <div>
+                        <label for="{{ form.email.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">邮箱</label>
+                        {{ form.email|add_class:"w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" }}
+                    </div>
+                    <div>
+                        <label for="{{ form.nickname.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">昵称</label>
+                        {{ form.nickname|add_class:"w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" }}
+                    </div>
+                    <div>
+                        <label for="{{ form.password1.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">密码</label>
+                        {{ form.password1|add_class:"w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" }}
+                    </div>
+                    <div>
+                        <label for="{{ form.password2.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">确认密码</label>
+                        {{ form.password2|add_class:"w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" }}
+                    </div>
+                    <button type="submit" class="w-full py-2 px-4 bg-primary text-white rounded-md hover:bg-primary-dark transition-colors text-sm font-medium">
+                        注册
+                    </button>
+                </form>
+
+                <p class="text-center text-sm text-gray-500 mt-6">
+                    已有账号？ <a href="{% url 'login' %}" class="font-medium text-primary hover:text-secondary">立即登录</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% if form.errors %}
+<div class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded max-w-xl mx-auto mt-6">
+    <strong>注册失败，请修正以下错误：</strong>
+    <ul class="list-disc pl-5 mt-2 text-sm">
+        {% for field in form %}
+            {% for error in field.errors %}
+                <li>{{ field.label }}: {{ error }}</li>
+            {% endfor %}
+        {% endfor %}
+        {% for error in form.non_field_errors %}
+            <li>{{ error }}</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}

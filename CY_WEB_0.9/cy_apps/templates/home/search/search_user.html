@@ -1,0 +1,1101 @@
+{% extends "layouts/base.html" %}
+{% block title %}疫情数据查询{% endblock %}
+{% block content %}
+
+
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #D82138;
+            --secondary-color: #3f37c9;
+            --accent-color: #4895ef;
+            --light-color: #f8f9fa;
+            --dark-color: #212529;
+            --success-color: #4cc9f0;
+            --warning-color: #f72585;
+            --danger-color: #7209b7;
+            --border-color: #e9ecef;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+        }
+
+        ▪ {
+
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        .chart-image {
+            width: 100%;
+            max-width: 1000px;
+            margin: 20px auto;
+            display: block;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        #chart-container {
+            transition: opacity 0.3s;
+            min-height: 400px; /* 确保最小高度 */
+        }
+
+        /* 加载动画 */
+        .chart-loading {
+            position: relative;
+            min-height: 300px;
+        }
+
+        .chart-loading::after {
+            content: "图表生成中...";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #666;
+        }
+
+        /* 添加表格标题样式 */
+        .data-table caption {
+            caption-side: bottom;
+            padding: 12px;
+            color: #666;
+            background: #f8f9fa;
+            border-radius: 0 0 8px 8px;
+        }
+
+        /* 确保表格可见性 */
+        .data-table {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        {#body {#}
+        {#    font-family: 'Roboto', sans-serif;#}
+        {#    background-color: #f5f7fa;#}
+        {#    color: var(--dark-color);#}
+        {#    line-height: 1.6;#}
+        {#}#}
+
+        .dashboard-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .dashboard-header h1 {
+            font-size: 24px;
+            font-weight: 500;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+        }
+
+        .dashboard-header h1 i {
+            margin-right: 10px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .query-panel {
+            display: flex;
+            gap: 20px;
+        }
+
+        .query-filters {
+            flex: 0 0 350px;
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 12px var(--shadow-color);
+        }
+
+        .query-results {
+            flex: 1;
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 12px var(--shadow-color);
+        }
+
+        .filter-section {
+            margin-bottom: 25px;
+        }
+
+        .filter-section h3 {
+            font-size: 16px;
+            margin-bottom: 15px;
+            color: var(--secondary-color);
+            display: flex;
+            align-items: center;
+        }
+
+        .filter-section h3 i {
+            margin-right: 8px;
+        }
+
+        .filter-row {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .filter-group label {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--dark-color);
+        }
+
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+
+        .btn {
+            padding: 8px 15px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--secondary-color);
+        }
+
+        .btn-secondary {
+            background-color: white;
+            color: var(--primary-color);
+            border: 1px solid var(--primary-color);
+        }
+
+        .btn-secondary:hover {
+            background-color: #f0f4ff;
+        }
+
+        .btn-outline {
+            background-color: white;
+            color: var(--dark-color);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-outline:hover,
+        .btn-outline.active {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .btn-icon {
+            padding: 8px;
+            border-radius: 6px;
+            min-width: 36px;
+        }
+
+        .btn-large {
+            padding: 10px 20px;
+        }
+
+        .btn-link {
+            background: none;
+            border: none;
+            color: var(--primary-color);
+            padding: 0;
+        }
+
+        .form-control {
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 14px;
+            width: 100%;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(67, 97, 238, 0.2);
+        }
+
+        .date-range-picker {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .date-range-picker span {
+            font-size: 14px;
+            color: #6c757d;
+        }
+
+        .select2 {
+            width: 100% !important;
+        }
+
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            position: relative;
+            padding-left: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            user-select: none;
+        }
+
+        .checkbox-container input {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+            height: 0;
+            width: 0;
+        }
+
+        .checkmark {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 18px;
+            width: 18px;
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+        }
+
+        .checkbox-container:hover input ~ .checkmark {
+            background-color: #f1f1f1;
+        }
+
+        .checkbox-container input:checked ~ .checkmark {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .checkmark:after {
+            content: "";
+            position: absolute;
+            display: none;
+        }
+
+        .checkbox-container input:checked ~ .checkmark:after {
+            display: block;
+        }
+
+        .checkbox-container .checkmark:after {
+            left: 6px;
+            top: 2px;
+            width: 5px;
+            height: 10px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+
+        .advanced-filters {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .advanced-filter {
+            display: flex;
+            gap: 5px;
+        }
+
+        .advanced-filter .form-control {
+            flex: 1;
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .results-header h3 {
+            font-size: 18px;
+            font-weight: 500;
+            color: var(--secondary-color);
+            display: flex;
+            align-items: center;
+        }
+
+        .results-header h3 i {
+            margin-right: 8px;
+        }
+
+        .no-results {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 300px;
+            color: #adb5bd;
+        }
+
+        .no-results i {
+            font-size: 50px;
+            margin-bottom: 15px;
+        }
+
+        .no-results p {
+            font-size: 16px;
+        }
+
+        .action-section {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 30px;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .data-table thead th {
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: 500;
+        }
+
+        .data-table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .data-table tbody tr:nth-child(even) {
+            background-color: #f5f7fa;
+        }
+
+        @media (max-width: 1200px) {
+            .query-panel {
+                flex-direction: column;
+            }
+
+            .query-filters {
+                flex: 1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+
+            .header-actions {
+                width: 100%;
+                justify-content: flex-end;
+            }
+
+            .filter-row {
+                flex-direction: column;
+            }
+
+            .data-table th,
+            .data-table td {
+                padding: 8px;
+                font-size: 14px;
+            }
+        }
+
+        .view-toggle {
+            display: flex;
+            gap: 10px; /* 按钮之间的间隙，可根据需要调整 */
+        }
+    </style>
+    <div class="row">
+        <div class="col-12 col-lg-6">
+            <div class="card border-0 shadow">
+                <div class="">
+                    <div class="card-body">
+                        <div class="dashboard-container">
+                            <header class="dashboard-header">
+                                <h1><i class="fas fa-virus"></i> BJFU-实时疫情智库-全球疫情数据查询系统</h1>
+                                <div class="header-actions">
+                                    <button class="btn btn-primary"><i class="fas fa-download"></i> 导出数据</button>
+                                    <button class="btn btn-primary"><i class="fas fa-cog"></i> 设置</button>
+                                </div>
+                            </header>
+
+                            <div class="query-panel">
+                                <div class="query-filters">
+                                    <div class="filter-section">
+                                        <h3><i class="fas fa-filter"></i> 数据筛选</h3>
+
+                                        <div class="filter-row">
+                                            <div class="filter-group">
+                                                <label>地区范围</label>
+                                                <div class="btn-group region-scope">
+                                                    <button class="btn btn-outline active" data-value="global">全球
+                                                    </button>
+                                                    <button class="btn btn-outline" data-value="continent">大洲</button>
+                                                    <button class="btn btn-outline" data-value="country">国家</button>
+                                                </div>
+                                            </div>
+                                            <div class="filter-group">
+                                                <label>选择地区</label>
+                                                <select class="select2" id="region-select">
+                                                    <option value="all" selected>全部地区</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <!-- 时间范围 -->
+                                        <div class="filter-row">
+                                            <div class="filter-group">
+                                                <label>时间范围</label>
+                                                <div class="date-range-picker">
+                                                    <input type="date" id="start-date" class="form-control"
+                                                           value="2020-01-01">
+                                                    <span>至</span>
+                                                    <input type="date" id="end-date" class="form-control"
+                                                           value="2023-12-31">
+                                                </div>
+                                            </div>
+                                            <div class="filter-group">
+                                                <label>时间粒度</label>
+                                                <div class="btn-group time-granularity">
+                                                    <button class="btn btn-outline active" data-value="day">日数据
+                                                    </button>
+                                                    <button class="btn btn-outline" data-value="week">周数据</button>
+                                                    <button class="btn btn-outline" data-value="month">月数据</button>
+                                                    <button class="btn btn-outline" data-value="quarter">季度数据
+                                                    </button>
+                                                    <button class="btn btn-outline" data-value="year">年数据</button>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- 数据类型 -->
+                                        <div class="filter-row">
+                                            <div class="filter-group">
+                                                <label>数据类型</label>
+                                                <div class="checkbox-group">
+                                                    <label class="checkbox-container">
+                                                        <input type="checkbox" id="confirmed_cases" checked>
+                                                        <span class="checkmark"></span> 确诊病例
+                                                    </label>
+                                                    <label class="checkbox-container">
+                                                        <input type="checkbox" id="deaths" checked>
+                                                        <span class="checkmark"></span> 死亡病例
+                                                    </label>
+                                                    <label class="checkbox-container">
+                                                        <input type="checkbox" id="recovered" checked>
+                                                        <span class="checkmark"></span> 治愈病例
+                                                    </label>
+                                                    <label class="checkbox-container">
+                                                        <input type="checkbox" id="vaccinations">
+                                                        <span class="checkmark"></span> 疫苗接种
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            <div class="filter-group">
+                                                <label>数据维度</label>
+                                                <div class="btn-group data-dimension">
+                                                    <button class="btn btn-outline active" data-value="cumulative">
+                                                        累计数据
+                                                    </button>
+                                                    <button class="btn btn-outline" data-value="incremental">新增数据
+                                                    </button>
+                                                    <button class="btn btn-outline" data-value="growth_rate">增长率
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- 操作按钮 -->
+                                    <div class="action-section">
+                                        <button class="btn btn-primary btn-large" id="query-btn"><i
+                                                class="fas fa-search"></i> 查询数据
+                                        </button>
+                                        <button class="btn btn-outline" id="reset-btn"><i class="fas fa-redo"></i> 重置条件
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- 结果展示区域 -->
+                                <div class="query-results">
+                                    <div class="results-header">
+                                        <h3><i class="fas fa-table"></i> 查询结果</h3>
+                                        <div class="view-toggle">
+                                            <button class="btn btn-outline active" data-view="table"><i
+                                                    class="fas fa-table"></i> 表格
+                                            </button>
+                                            <button class="btn btn-outline" data-view="chart"><i
+                                                    class="fas fa-chart-line"></i> 折线图
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="results-container">
+                                        <div class="no-results">
+                                            <i class="fas fa-search"></i>
+                                            <p>设置您的查询条件并点击"查询数据"按钮</p>
+                                        </div>
+                                        <div class="table-container"
+                                             style="display: none;min-height: 820px; position: relative;">
+                                            <table class="data-table"></table>
+                                        </div>
+                                        <div id="charts-wrapper" style="display: none; min-height: 900px;">
+                                            <div id="chart-container"
+                                                 style="width: 100%; height: 50vh; margin-top:2rem;opacity: 0;"></div>
+                                            <div id="bar-container"
+                                                 style="width: 100%; height: 50vh; margin-top:2rem; opacity:0;"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- ✅ jQuery 必须在最前面 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+
+    <!-- ✅ DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+
+    <!-- ✅ DataTables JS，放在 jQuery 后面 -->
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+    <!-- ✅ 其他前端库 -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="{{ url_for('static', filename='assets/js/echarts.js') }}"></script>
+    <script src="{{ url_for('static', filename='assets/js/search_user.js') }}"></script>
+    <script>
+        const regionData = {
+            global: [{value: 'global', name: '全球'}],
+            continent: [
+                {value: 'Asia', name: '亚洲'},
+                {value: 'Europe', name: '欧洲'},
+                {value: 'Africa', name: '非洲'},
+                {value: 'North America', name: '北美洲'},
+                {value: 'South America', name: '南美洲'},
+                {value: 'Oceania', name: '大洋洲'},
+                {value: 'Antarctica', name: '南极洲'}
+            ],
+            country: [
+                // ====== 亚洲（47个）====== //
+                {value: 'Afghanistan', name: '阿富汗'},
+                {value: 'China', name: '中国'},
+                {value: 'India', name: '印度'},
+                {value: 'Japan', name: '日本'},
+                {value: 'South Korea', name: '韩国'},
+                {value: 'Indonesia', name: '印度尼西亚'},
+                {value: 'Saudi Arabia', name: '沙特阿拉伯'},
+                {value: 'Iran', name: '伊朗'},
+                {value: 'Thailand', name: '泰国'},
+                {value: 'Vietnam', name: '越南'},
+                {value: 'Malaysia', name: '马来西亚'},
+                {value: 'Philippines', name: '菲律宾'},
+                {value: 'Singapore', name: '新加坡'},
+                {value: 'Israel', name: '以色列'},
+                {value: 'Turkey', name: '土耳其'},
+                {value: 'United Arab Emirates', name: '阿联酋'},
+                {value: 'Iraq', name: '伊拉克'},
+                {value: 'Pakistan', name: '巴基斯坦'},
+                {value: 'Bangladesh', name: '孟加拉国'},
+                {value: 'Kazakhstan', name: '哈萨克斯坦'},
+                {value: 'Sri Lanka', name: '斯里兰卡'},
+                {value: 'Nepal', name: '尼泊尔'},
+                {value: 'Lebanon', name: '黎巴嫩'},
+                {value: 'Jordan', name: '约旦'},
+                {value: 'Syria', name: '叙利亚'},
+                {value: 'Yemen', name: '也门'},
+                {value: 'Oman', name: '阿曼'},
+                {value: 'Kuwait', name: '科威特'},
+                {value: 'Qatar', name: '卡塔尔'},
+                {value: 'Georgia', name: '格鲁吉亚'},
+                {value: 'Armenia', name: '亚美尼亚'},
+                {value: 'Azerbaijan', name: '阿塞拜疆'},
+                {value: 'Bhutan', name: '不丹'},
+                {value: 'Maldives', name: '马尔代夫'},
+                {value: 'Brunei', name: '文莱'},
+                {value: 'Mongolia', name: '蒙古'},
+                {value: 'Cyprus', name: '塞浦路斯'},
+                {value: 'Tajikistan', name: '塔吉克斯坦'},
+                {value: 'Turkmenistan', name: '土库曼斯坦'},
+                {value: 'Uzbekistan', name: '乌兹别克斯坦'},
+                {value: 'Kyrgyzstan', name: '吉尔吉斯斯坦'},
+                {value: 'Laos', name: '老挝'},
+                {value: 'Cambodia', name: '柬埔寨'},
+                {value: 'Timor-Leste', name: '东帝汶'},
+                {value: 'Palestine', name: '巴勒斯坦'},
+                {value: 'Taiwan, China', name: '中国台湾省'},  // 网页[3]特殊处理
+                {value: 'Hong Kong, China', name: '中国香港'},
+                {value: 'Macau, China', name: '中国澳门'},
+
+                // ====== 欧洲（44个）====== //
+                {value: 'Germany', name: '德国'},
+                {value: 'France', name: '法国'},
+                {value: 'United Kingdom', name: '英国'},
+                {value: 'Italy', name: '意大利'},
+                {value: 'Spain', name: '西班牙'},
+                {value: 'Sweden', name: '瑞典'},
+                {value: 'Switzerland', name: '瑞士'},
+                {value: 'Netherlands', name: '荷兰'},
+                {value: 'Belgium', name: '比利时'},
+                {value: 'Greece', name: '希腊'},
+                {value: 'Portugal', name: '葡萄牙'},
+                {value: 'Russia', name: '俄罗斯'},
+                {value: 'Ukraine', name: '乌克兰'},
+                {value: 'Poland', name: '波兰'},
+                {value: 'Austria', name: '奥地利'},
+                {value: 'Romania', name: '罗马尼亚'},
+                {value: 'Czechia', name: '捷克'},
+                {value: 'Hungary', name: '匈牙利'},
+                {value: 'Serbia', name: '塞尔维亚'},
+                {value: 'Croatia', name: '克罗地亚'},
+                {value: 'Bulgaria', name: '保加利亚'},
+                {value: 'Belarus', name: '白俄罗斯'},
+                {value: 'Slovakia', name: '斯洛伐克'},
+                {value: 'Norway', name: '挪威'},
+                {value: 'Finland', name: '芬兰'},
+                {value: 'Denmark', name: '丹麦'},
+                {value: 'Ireland', name: '爱尔兰'},
+                {value: 'Lithuania', name: '立陶宛'},
+                {value: 'Latvia', name: '拉脱维亚'},
+                {value: 'Estonia', name: '爱沙尼亚'},
+                {value: 'Slovenia', name: '斯洛文尼亚'},
+                {value: 'North Macedonia', name: '北马其顿'},
+                {value: 'Albania', name: '阿尔巴尼亚'},
+                {value: 'Bosnia and Herzegovina', name: '波黑'},
+                {value: 'Montenegro', name: '黑山'},
+                {value: 'Luxembourg', name: '卢森堡'},
+                {value: 'Malta', name: '马耳他'},
+                {value: 'Iceland', name: '冰岛'},
+                {value: 'Moldova', name: '摩尔多瓦'},
+                {value: 'Liechtenstein', name: '列支敦士登'},
+                {value: 'Monaco', name: '摩纳哥'},
+                {value: 'San Marino', name: '圣马力诺'},
+                {value: 'Andorra', name: '安道尔'},
+                {value: 'Kosovo', name: '科索沃'},  // 网页[5]特殊实体
+
+                // ====== 美洲（35个）====== //
+                {value: 'United States', name: '美国'},
+                {value: 'Canada', name: '加拿大'},
+                {value: 'Brazil', name: '巴西'},
+                {value: 'Mexico', name: '墨西哥'},
+                {value: 'Argentina', name: '阿根廷'},
+                {value: 'Chile', name: '智利'},
+                {value: 'Colombia', name: '哥伦比亚'},
+                {value: 'Peru', name: '秘鲁'},
+                {value: 'Venezuela', name: '委内瑞拉'},
+                {value: 'Ecuador', name: '厄瓜多尔'},
+                {value: 'Guatemala', name: '危地马拉'},
+                {value: 'Cuba', name: '古巴'},
+                {value: 'Dominican Republic', name: '多米尼加'},
+                {value: 'Honduras', name: '洪都拉斯'},
+                {value: 'Bolivia', name: '玻利维亚'},
+                {value: 'El Salvador', name: '萨尔瓦多'},
+                {value: 'Paraguay', name: '巴拉圭'},
+                {value: 'Costa Rica', name: '哥斯达黎加'},
+                {value: 'Panama', name: '巴拿马'},
+                {value: 'Uruguay', name: '乌拉圭'},
+                {value: 'Jamaica', name: '牙买加'},
+                {value: 'Trinidad and Tobago', name: '特立尼达和多巴哥'},
+                {value: 'Guyana', name: '圭亚那'},
+                {value: 'Suriname', name: '苏里南'},
+                {value: 'Bahamas', name: '巴哈马'},
+                {value: 'Barbados', name: '巴巴多斯'},
+                {value: 'Saint Lucia', name: '圣卢西亚'},
+                {value: 'Grenada', name: '格林纳达'},
+                {value: 'Antigua and Barbuda', name: '安提瓜和巴布达'},
+                {value: 'Belize', name: '伯利兹'},
+                {value: 'Saint Vincent and the Grenadines', name: '圣文森特和格林纳丁斯'},
+                {value: 'Dominica', name: '多米尼克'},
+                {value: 'Saint Kitts and Nevis', name: '圣基茨和尼维斯'},
+                {value: 'Haiti', name: '海地'},
+                {value: 'Nicaragua', name: '尼加拉瓜'},
+
+                // ====== 非洲（54个）====== //
+                {value: 'Nigeria', name: '尼日利亚'},
+                {value: 'South Africa', name: '南非'},
+                {value: 'Egypt', name: '埃及'},
+                {value: 'Algeria', name: '阿尔及利亚'},
+                {value: 'Ethiopia', name: '埃塞俄比亚'},
+                {value: 'Kenya', name: '肯尼亚'},
+                {value: 'Tanzania', name: '坦桑尼亚'},
+                {value: 'Ghana', name: '加纳'},
+                {value: 'Angola', name: '安哥拉'},
+                {value: 'Morocco', name: '摩洛哥'},
+                {value: 'Uganda', name: '乌干达'},
+                {value: 'Sudan', name: '苏丹'},
+                {value: 'Mozambique', name: '莫桑比克'},
+                {value: 'Côte d\'Ivoire', name: '科特迪瓦'},  // 网页[4]特殊字符处理
+                {value: 'Madagascar', name: '马达加斯加'},
+                {value: 'Cameroon', name: '喀麦隆'},
+                {value: 'Zambia', name: '赞比亚'},
+                {value: 'Zimbabwe', name: '津巴布韦'},
+                {value: 'Senegal', name: '塞内加尔'},
+                {value: 'Tunisia', name: '突尼斯'},
+                {value: 'Chad', name: '乍得'},
+                {value: 'Somalia', name: '索马里'},
+                {value: 'Guinea', name: '几内亚'},
+                {value: 'Rwanda', name: '卢旺达'},
+                {value: 'Benin', name: '贝宁'},
+                {value: 'Burundi', name: '布隆迪'},
+                {value: 'Mali', name: '马里'},
+                {value: 'Libya', name: '利比亚'},
+                {value: 'Mauritania', name: '毛里塔尼亚'},
+                {value: 'Niger', name: '尼日尔'},
+                {value: 'Burkina Faso', name: '布基纳法索'},
+                {value: 'Malawi', name: '马拉维'},
+                {value: 'Togo', name: '多哥'},
+                {value: 'Eritrea', name: '厄立特里亚'},
+                {value: 'Sierra Leone', name: '塞拉利昂'},
+                {value: 'Central African Republic', name: '中非'},
+                {value: 'Liberia', name: '利比里亚'},
+                {value: 'Congo (Brazzaville)', name: '刚果(布)'},
+                {value: 'Congo (Kinshasa)', name: '刚果(金)'},
+                {value: 'Gabon', name: '加蓬'},
+                {value: 'Botswana', name: '博茨瓦纳'},
+                {value: 'Namibia', name: '纳米比亚'},
+                {value: 'Lesotho', name: '莱索托'},
+                {value: 'Equatorial Guinea', name: '赤道几内亚'},
+                {value: 'Mauritius', name: '毛里求斯'},
+                {value: 'Eswatini', name: '斯威士兰'},
+                {value: 'Djibouti', name: '吉布提'},
+                {value: 'Comoros', name: '科摩罗'},
+                {value: 'Cabo Verde', name: '佛得角'},
+                {value: 'Sao Tome and Principe', name: '圣多美和普林西比'},
+                {value: 'Seychelles', name: '塞舌尔'},
+                {value: 'Gambia', name: '冈比亚'},
+                {value: 'Guinea-Bissau', name: '几内亚比绍'},
+                {value: 'South Sudan', name: '南苏丹'},
+
+                // ====== 大洋洲（14个）====== //
+                {value: 'Australia', name: '澳大利亚'},
+                {value: 'New Zealand', name: '新西兰'},
+                {value: 'Papua New Guinea', name: '巴布亚新几内亚'},
+                {value: 'Fiji', name: '斐济'},
+                {value: 'Solomon Islands', name: '所罗门群岛'},
+                {value: 'Vanuatu', name: '瓦努阿图'},
+                {value: 'Samoa', name: '萨摩亚'},
+                {value: 'Tonga', name: '汤加'},
+                {value: 'Kiribati', name: '基里巴斯'},
+                {value: 'Micronesia', name: '密克罗尼西亚'},
+                {value: 'Marshall Islands', name: '马绍尔群岛'},
+                {value: 'Palau', name: '帕劳'},
+                {value: 'Tuvalu', name: '图瓦卢'},
+                {value: 'Nauru', name: '瑙鲁'},
+
+                // ====== 特殊实体（23个）====== //
+                {value: 'Diamond Princess', name: '钻石公主号邮轮'},  // 网页[5]
+                {value: 'MS Zaandam', name: '赞丹号邮轮'},
+                {value: 'Summer Olympics 2020', name: '2020夏季奥运会'},
+                {value: 'Winter Olympics 2022', name: '2022冬季奥运会'},
+                {value: 'Holy See', name: '梵蒂冈'},
+                {value: 'Western Sahara', name: '西撒哈拉'},  // 网页[5]
+                {value: 'French Southern Territories', name: '法属南部领地'},
+                {value: 'Bermuda', name: '百慕大(英)'},
+                {value: 'Cayman Islands', name: '开曼群岛(英)'},
+                {value: 'Greenland', name: '格陵兰(丹)'},
+                {value: 'Puerto Rico', name: '波多黎各(美)'},
+                {value: 'Guam', name: '关岛(美)'},
+                {value: 'Aruba', name: '阿鲁巴(荷)'},
+                {value: 'Curaçao', name: '库拉索(荷)'},
+                {value: 'New Caledonia', name: '新喀里多尼亚(法)'},
+                {value: 'French Polynesia', name: '法属波利尼西亚'},
+                {value: 'American Samoa', name: '美属萨摩亚'},
+                {value: 'Cook Islands', name: '库克群岛'},
+                {value: 'Niue', name: '纽埃'},
+                {value: 'Falkland Islands', name: '马尔维纳斯群岛(英)'},  // 网页[5]
+                {value: 'Gibraltar', name: '直布罗陀(英)'},
+                {value: 'Faroe Islands', name: '法罗群岛(丹)'},
+                {value: 'Isle of Man', name: '马恩岛(英)'}
+            ]
+        };
+        let lastResponseData
+        let lastResponseColumns
+
+        function renderChart(data, columns) {
+            const chartDom = document.getElementById('chart-container');
+            const myChart = echarts.init(chartDom);
+            const option = {
+                title: {text: '疫情数据趋势'},
+                tooltip: {trigger: 'axis'},
+                legend: {data: []},
+                xAxis: {
+                    type: 'category',
+                    data: [], // 日期
+                    boundaryGap: false // 确保线图从第一个点开始显示
+                },
+                yAxis: {
+                    type: 'value'
+                },
+                series: [],
+                dataZoom: [{
+                    type: 'slider', // 使用滑块方式
+                    show: true, // 显示滑块
+                    realtime: true, // 滑动时实时更新
+                    start: 0, // 设置初始的开始时间
+                    end: 100, // 设置初始的结束时间
+                    xAxisIndex: 0, // 设置滑块与 X 轴绑定
+                }],
+            };
+
+            // 提取日期
+            const dates = data.map(item => item['日期']);
+            option.xAxis.data = dates;
+
+            // 设置需要绘制的系列数据（除去“国家”和“日期”）
+            const dataColumns = columns.filter(col => col !== '国家' && col !== '日期');
+            option.legend.data = dataColumns;
+
+            dataColumns.forEach(col => {
+                const seriesData = data.map(item => item[col]);
+                option.series.push({
+                    name: col,
+                    type: 'line',
+                    smooth: true,
+                    data: seriesData
+                });
+            });
+
+            // 渲染图表
+            myChart.setOption(option);
+
+            // 显示动画效果
+            $('#chart-container').css('opacity', 1);
+        }
+
+
+        function populateRegionSelect(scope) {
+            const $select = $('#region-select');
+            $select.empty();
+
+            const dataList = regionData[scope];
+            if (dataList && dataList.length) {
+                dataList.forEach(item => {
+                    const option = $('<option></option>')
+                        .attr('value', item.value)
+                        .text(item.name);
+                    $select.append(option);
+                });
+            }
+
+            $select.trigger('change');
+        }
+
+
+        $(document).ready(function () {
+            // Select2 初始化
+            $('#region-select').select2();
+            // 地区范围按钮切换
+            $('.region-scope .btn').click(function () {
+                $('.region-scope .btn').removeClass('active');
+                $(this).addClass('active');
+                const scope = $(this).data('value');
+
+                console.log('地区范围切换:', scope);
+
+                // 切换下拉框内容
+                populateRegionSelect(scope);
+            });
+
+            // 时间粒度切换
+            $('.time-granularity .btn').click(function () {
+                $('.time-granularity .btn').removeClass('active');
+                $(this).addClass('active');
+                console.log('时间粒度:', $(this).data('value'));
+            });
+
+            // 数据维度切换
+            $('.data-dimension .btn').click(function () {
+                $('.data-dimension .btn').removeClass('active');
+                $(this).addClass('active');
+                console.log('数据维度:', $(this).data('value'));
+            });
+
+            // 视图切换
+            $('.view-toggle .btn').click(function () {
+                $('.view-toggle .btn').removeClass('active');
+                $(this).addClass('active');
+                const view = $(this).data('view');
+
+                if (view === 'table') {
+                    $('.table-container').show();
+                    $('#charts-wrapper').hide();
+                } else if (view === 'chart') {
+                    $('.table-container').hide();
+                    $('#charts-wrapper').show();
+                    // ✅ 渲染折线图
+                    renderChart(lastResponseData, lastResponseColumns);
+                }
+
+                console.log('视图切换:', view);
+            });
+
+// 查询按钮
+            $('#query-btn').click(function () {
+                const regionScope = $('.region-scope .btn.active').data('value');
+                const region = $('#region-select').val();
+                const startDate = $('#start-date').val();
+                const endDate = $('#end-date').val();
+                const timeGranularity = $('.time-granularity .btn.active').data('value');
+                const dataDimension = $('.data-dimension .btn.active').data('value');
+
+                const dataTypes = [];
+                $('.checkbox-group input:checked').each(function () {
+                    dataTypes.push($(this).attr('id'));
+                });
+
+                const requestData = {
+                    regionScope,
+                    region,
+                    startDate,
+                    endDate,
+                    timeGranularity,
+                    dataDimension,
+                    dataTypes
+                };
+
+                console.log('查询条件:', requestData);
+
+                // 发送 AJAX 请求到后端
+                $.ajax({
+                    url: '/query_data',      // Flask 后端路由
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(requestData),
+                    success: function (response) {
+                        lastResponseData = response.result.data;
+                        lastResponseColumns = response.result.columns;
+                        console.log('后端返回的数据:', response);
+
+                        const columns = response.result.columns;
+                        const data = response.result.data;
+
+                        // ✅ 销毁 DataTable（如果已经存在）
+                        if ($.fn.DataTable.isDataTable('.data-table')) {
+                            $('.data-table').DataTable().destroy();
+                        }
+
+                        // ✅ 生成表头
+                        let theadHtml = '<tr>';
+                        columns.forEach(col => {
+                            theadHtml += `<th>${col}</th>`;
+                        });
+                        theadHtml += '</tr>';
+
+                        // ✅ 生成表体
+                        let tbodyHtml = '';
+                        data.forEach(row => {
+                            let rowHtml = '<tr>';
+                            columns.forEach(col => {
+                                rowHtml += `<td>${row[col]}</td>`;
+                            });
+                            rowHtml += '</tr>';
+                            tbodyHtml += rowHtml;
+                        });
+
+                        // ✅ 整个表格替换
+                        $('.data-table').html(`<thead>${theadHtml}</thead><tbody>${tbodyHtml}</tbody>`);
+
+                        // ✅ 重新初始化 DataTable
+                        $('.data-table').DataTable({
+                            pageLength: 20,
+                            lengthMenu: [10, 20, 25, 50, 100],  // ✅ 加入 20
+                            lengthChange: true,
+                            searching: true,
+                            ordering: true,
+                            language: {
+                                url: "//cdn.datatables.net/plug-ins/1.13.6/i18n/zh-Hans.json"
+                            }
+                        });
+
+                        $('.no-results').hide();
+                        $('.table-container').show();
+                        $('#charts-wrapper').hide();
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('请求出错:', error);
+                    }
+                });
+
+                $('.no-results').hide();
+                $('.table-container').show();
+                $('#charts-wrapper').hide();
+            });
+
+            // 重置按钮
+            $('#reset-btn').click(function () {
+                // 地区范围
+                $('.region-scope .btn').removeClass('active').eq(0).addClass('active');
+
+                // 地区选择
+                $('#region-select').val('all').trigger('change');
+
+                // 时间范围
+                $('#start-date').val('2020-01-01');
+                $('#end-date').val('2023-12-31');
+
+                // 时间粒度
+                $('.time-granularity .btn').removeClass('active').eq(0).addClass('active');
+
+                // 数据类型
+                $('.checkbox-group input').prop('checked', true);
+
+                // 数据维度
+                $('.data-dimension .btn').removeClass('active').eq(0).addClass('active');
+
+                console.log('已重置条件');
+            });
+        });
+    </script>
+
+{% endblock content %}

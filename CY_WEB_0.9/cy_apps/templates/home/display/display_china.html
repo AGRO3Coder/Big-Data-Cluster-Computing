@@ -1,0 +1,1357 @@
+{% extends "layouts/base.html" %}
+{% block title %}国内疫情概况{% endblock %}
+{% block content %}
+<style>
+/* 更新统计卡片配色 */
+.stat-item:nth-child(1) {
+    background: linear-gradient(135deg, #6A11CB 0%, #2575FC 100%) !important;
+}
+.stat-item:nth-child(2) {
+    background: linear-gradient(135deg, #4FACFE 0%, #00F2FE 100%) !important;
+}
+.stat-item:nth-child(3) {
+    background: linear-gradient(135deg, #7ccfa8 0%, #4cbf8a 100%) !important;
+}
+.stat-item:nth-child(4) {
+    background: linear-gradient(135deg, #F093FB 0%, #F5576C 100%) !important;
+}
+
+.header-bar {
+  background-color: #d82138; /* 深红色背景 */
+  color: white;
+  text-align: center;
+  padding: 15px;
+  width:100%;
+  z-index: 1000;
+  font-family:Consolas;
+  animation: float 3s ease-in-out infinite;
+  font-size:25px;
+  border:1px solid black;
+  border-radius: 7px;
+  box-shadow: 0 4px 6px #FBFFA3;
+}
+.header-container {
+text-align: center;
+margin-bottom: 20px;
+position: relative;
+}
+.header-image {
+width: 100%;
+height: 120px;
+object-fit: cover;
+margin-top:20px;
+transition: all 0.4s ease;
+}
+.header-image:hover {
+transform: scale(1.01);
+box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+}
+/* 更新图表配色 */
+:root {
+    --confirmed-color: #FF4757;
+    --suspected-color: #FFA502;
+    --recovered-color: #2ED573;
+    --deaths-color: #57606F;
+    --active-color: #5352ED;
+}
+    .map-box {
+        width: 100%;
+        height: 500px;
+        background: #F9F9F9;
+        border:1px solid red;
+    }
+
+    /* 包裹 slider 和按钮的容器 */
+    .slider-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin: 0.5rem 0;
+    }
+
+    /* 通用按钮样式（更新） */
+    .slider-btn {
+        background-color:#D82138;
+        border: none;
+        border-radius: 0.5rem; /* 圆角加大，更圆滑 */
+        width: 1.6rem;
+        height: 1.6rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: background-color 0.15s, transform 0.1s, box-shadow 0.15s;
+    }
+
+    .slider-btn:hover {
+        background-color: #FF4B68; /* 悬停时略微加深 */
+    }
+
+    .slider-btn:focus,
+    .slider-btn:active {
+        background-color: #D82138; /* 点击/选中时更明显 */
+        box-shadow: 0 0 0 3px rgba(24, 86, 153, 0.5);
+        transform: translateY(1px); /* 轻微按下效果 */
+        outline: none;
+    }
+
+    /* 让 SVG 图标根据按钮大小自适应 */
+    .slider-btn svg {
+        width: 1.2rem;
+        height: 1.2rem;
+        fill: #fff;
+    }
+
+    /* 滑块占满中间剩余空间 */
+    .slider-wrapper input[type="range"] {
+        flex: 1;
+        margin: 0;
+    }
+
+    /* 放到你自己的 CSS 文件里 */
+    .cy_to_r {
+        margin-left: auto;
+    }
+
+    .dot-nav-three {
+        position: relative;
+        z-index: 10;
+        display: flex;
+        gap: .5rem;
+        padding: .25rem;
+        background: rgba(0, 0, 0, 0.1);
+        border-radius: .5rem;
+    }
+
+    .dot-nav-three .dot {
+        width: .6rem;
+        height: .6rem;
+        background: rgba(0, 0, 0, 0.5);
+        border: 1px solid #fff;
+        border-radius: 50%;
+        cursor: pointer;
+        transition: width .2s, background-color .2s;
+    }
+
+    .dot-nav-three .dot.active {
+        width: 1.5rem;
+        border-radius: .3rem;
+        background: rgb(var(--Color-BJFU-221002224));
+    }
+    .card-body{
+        border:1px solid #FFF;
+        box-shadow: 0 0 8px #FFF;
+        display: flex;
+        padding:10px;
+    }
+    .to_lef_cy {
+flex:3; margin-right: 50px; background: white; height: 1120px;    animation: fadeIn 0.5s ease-out;
+    }
+
+/* 添加卡片悬停动画 */
+.chart-card:hover {
+    transform: Scale(1.03);
+    box-shadow: 0 12px 24px rgba(0,0,0,0.12);
+    transition: all 0.3s ease;
+}
+
+<!--.stats-card:hover {-->
+<!--    transform: Scale(1.03);-->
+<!--    box-shadow: 0 12px 24px rgba(0,0,0,0.12);-->
+<!--    transition: all 0.3s ease;-->
+<!--}-->
+
+/* 统计卡片悬停效果 */
+.stat-item:hover {
+    transform: scale(1.03) !important;
+    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+    transition: all 0.3s ease;
+}
+
+/* 图表加载动画 */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.chart-card {
+    animation: fadeIn 0.8s ease-out;
+}
+
+.stats-card {
+    animation: fadeIn 0.5s ease-out;
+}
+
+        /* 轮播图容器样式 */
+       .carousel-container {
+            position: relative;
+            width: 100%;
+            height: 25rem;
+            overflow: hidden;
+            border-radius: 15px;
+        }
+
+        /* 轮播项：绝对定位，默认隐藏 */
+       .carousel-item {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0; /* 初始透明 */
+            transition: all 0.4s ease;
+        }
+
+        /* 轮播图图片样式 */
+       .carousel-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        /* 轮播图内容区域样式 */
+       .carousel-content {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 20px;
+            color: white;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+        }
+
+        /* 分类标签样式 */
+       .category {
+            display: inline-block;
+            padding: 5px 10px;
+            background-color: green;
+            color: white;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+
+        /* 新闻标题样式 */
+       .title {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: white;
+        }
+
+        /* 新闻描述样式 */
+       .description {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: white;
+        }
+
+        /* 作者信息容器样式 */
+       .author {
+            display: flex;
+            align-items: center;
+        }
+
+        /* 作者头像样式 */
+       .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        /* 作者名称和时间样式 */
+       .author-info {
+            font-size: 14px;
+        }
+
+        /* 左右切换按钮样式 */
+       .prev,
+       .next {
+            position: absolute;
+            top: 10%;
+            transform: translateY(-50%);
+            padding: 10px 20px;
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 24px;
+            border-radius: 15px;
+        }
+
+       .prev {
+            left: 10px;
+        }
+
+       .next {
+            right: 10px;
+        }
+
+        /* 指示点容器样式 */
+       .dots_1 {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+        }
+
+        /* 指示点样式 */
+       .dot_1 {
+            width: 10px;
+            height: 10px;
+            background-color: white;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+       .dot_1.active {
+            background-color: gray;
+        }
+
+</style>
+
+<div class="row">
+    <div class="col-12 col-lg-6">
+        <div class="card border-0 shadow">
+            <div class="card-body">
+                <div class="to_lef_cy">
+                    <div class="mt-2 mb-3 d-flex align-items-center">
+                        <label for="timeline" class="mt-2"
+                               style="font-weight: bold;font-size: 1rem">选择查询日期：</label>
+                        <div class="slider-wrapper me-5">
+                            <button id="prevDay" class="slider-btn" type="button" aria-label="上一天">
+                                <svg viewBox="0 0 16 16">
+                                    <path d="M11 1 3 8l8 7V1z"/>
+                                </svg>
+                            </button>
+
+                            <input type="range" id="timeline" class="form-range"/>
+
+                            <button id="nextDay" class="slider-btn" type="button" aria-label="下一天">
+                                <svg viewBox="0 0 16 16">
+                                    <path d="M5 1v14l8-7L5 1z"/>
+                                </svg>
+                            </button>
+
+                        </div>
+                        <span id="selectedDate" style="margin-left: 0.5rem; font-weight: bold;">2020-01-20</span>
+
+                        <div id="loading"
+                             class="spinner-border text-primary"
+                             style="display: none; margin-left: 0.5rem;">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <div class="ms-auto d-flex gap-2 cy_to_r dot-nav-three">
+                            <span class="dot active" data-metric="confirmed"></span>
+                            <span class="dot" data-metric="deaths"></span>
+                            <span class="dot" data-metric="recovered"></span>
+                        </div>
+                    </div>
+                    <div id="china-container" class="map-box"></div>
+
+                    <div class="carousel-container" style="margin-top: 30px;">
+                        <!-- 轮播项 1 -->
+                        <div class="carousel-item" data-index="0">
+                            <a href="https://news.cctv.com/2025/05/20/ARTId8PgBQn4oHWYpwPzbWpU250520.shtml" target="_blank">
+                                <img src="{{ config.ASSETS_ROOT }}/img/front-pic/1.png" alt="科普" class="carousel-img">
+                            </a>
+                            <div class="carousel-content">
+                                <span class="category">科普</span>
+                                <a href="https://news.cctv.com/2025/05/20/ARTId8PgBQn4oHWYpwPzbWpU250520.shtml" target="_blank">
+                                    <h2 class="title">这波新冠病毒感染，与之前有啥不同</h2>
+                                    <p class="description">近段时间，新冠病毒感染出现一个“小高峰”，中国疾控中心发布数据显示，5月初门急诊流感样病例中，新冠病毒阳性样本占16.2%，与4月初7.5%的比例相比，呈现翻倍式增长。</p>
+                                </a>
+                                <div class="author">
+                                    <img src="{{ config.ASSETS_ROOT }}/img/front-pic/img.png" alt="作者头像" class="avatar">
+                                    <div class="author-info">
+                                        <p class="name">科技日报</p>
+                                        <p class="time">2025/05/20</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 轮播项 2 -->
+                        <div class="carousel-item" data-index="1">
+                            <a href="https://jiankang.cctv.com/2025/05/19/ARTIm5vY5zrslivK5UAil3tN250519.shtml" target="_blank">
+                                <img src="{{ config.ASSETS_ROOT }}/img/front-pic/2.jpg" alt="动态" class="carousel-img">
+                            </a>
+                            <div class="carousel-content">
+                                <span class="category">动态</span>
+                                <a href="https://jiankang.cctv.com/2025/05/19/ARTIm5vY5zrslivK5UAil3tN250519.shtml" target="_blank">
+                                    <h2 class="title">世界目光聚焦健康中国</h2>
+                                    <p class="description">第78届世界卫生大会中国代表团在瑞士日内瓦举行吹风会，介绍中国代表团参加大会情况及中国卫生健康工作成就经验。</p>
+                                </a>
+                                <div class="author">
+                                    <img src="{{ config.ASSETS_ROOT }}/img/front-pic/img.png" alt="作者头像" class="avatar">
+                                    <div class="author-info">
+                                        <p class="name">健康报</p>
+                                         <p class="time">2025/05/19</p>
+                                     </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 轮播项 3 -->
+                        <div class="carousel-item" data-index="2">
+                            <a href="https://news.cctv.com/2024/07/18/ARTIR51seZeHhXPjqJzQUpN8240718.shtml" target="_blank">
+                                <img src="{{ config.ASSETS_ROOT }}/img/front-pic/3.jpg" alt="国际" class="carousel-img">
+                            </a>
+                            <div class="carousel-content">
+                                <span class="category">国际</span>
+                                <a href="https://news.cctv.com/2024/07/18/ARTIR51seZeHhXPjqJzQUpN8240718.shtml" target="_blank">
+                                    <h2 class="title">美国总统拜登新冠检测呈阳性</h2>
+                                    <p class="description">当地时间7月17日，白宫表示，美国总统拜登新冠检测呈阳性。</p>
+                                </a>
+                                <div class="author">
+                                    <img src="{{ config.ASSETS_ROOT }}/img/front-pic/img.png" alt="作者头像" class="avatar">
+                                    <div class="author-info">
+                                        <p class="name">央视新闻</p>
+                                         <p class="time">2024/07/18</p>
+                                     </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 轮播项 4 -->
+                        <div class="carousel-item" data-index="3">
+                            <a href="https://news.cctv.com/2025/05/12/ARTIETl0y6sMMxO1SSaGYXrK250512.shtml" target="_blank">
+                                <img src="{{ config.ASSETS_ROOT }}/img/front-pic/4.jpg" alt="文件" class="carousel-img">
+                            </a>
+                            <div class="carousel-content">
+                                <span class="category">文件</span>
+                                <a href="https://news.cctv.com/2025/05/12/ARTIETl0y6sMMxO1SSaGYXrK250512.shtml" target="_blank">
+                                    <h2 class="title">新时代的中国国家安全</h2>
+                                    <p class="description">新华社北京5月12日电　国务院新闻办公室12日发布《新时代的中国国家安全》白皮书。</p>
+                                </a>
+                                <div class="author">
+                                    <img src="{{ config.ASSETS_ROOT }}/img/front-pic/img.png" alt="作者头像" class="avatar">
+                                    <div class="author-info">
+                                        <p class="name">新华网</p>
+                                         <p class="time">2025/05/12</p>
+                                     </div>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <!-- 左右切换按钮 -->
+                        <button class="prev">&#10094;</button>
+                        <button class="next">&#10095;</button>
+                        <!-- 指示点容器 -->
+                        <div class="dots_1">
+                            <span class="dot_1 active"></span>
+                            <span class="dot_1"></span>
+                            <span class="dot_1"></span>
+                            <span class="dot_1"></span>
+                        </div>
+                    </div>
+                </div>
+
+<div class="right-charts-container" style="display: flex; flex:2; flex-direction: column; gap: 15px; height: 100%;">
+        <!-- 数据统计卡片 -->
+    <div class="stats-card" style="flex: 1; background: white; border-radius: 12px; margin-top:70px; height: 200px;margin-bottom:20px; display: flex; flex-direction: column;">
+<!--    <div class="chart-header" style="padding: 15px 20px; border-bottom: 2px solid #FFE74C; border-radius: 12px;display: flex; align-items: center; background: linear-gradient(135deg, #B4161B 0%, #F96E6E 100%);">-->
+<!--        <h3 style="margin: 0; font-size: 20px; color: white; font-weight: 600;">今日疫情数据</h3>-->
+<!--    </div>-->
+        <div class="stats-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; flex: 1;">
+            <div class="stat-item" style="background: linear-gradient(135deg, #FFE985 0%, #FA742B 100%); border-radius: 8px; padding: 12px; color: white; position: relative; overflow: hidden;">
+                <div class="stat-value" id="stat-confirmed" style="font-size: 24px; font-weight: 700; margin-bottom: 5px;">0</div>
+                <div class="stat-label" style="font-size: 12px;">新增确诊</div>
+                <div class="stat-trend" id="confirmed-trend" style="position: absolute; right: 10px; bottom: 10px; font-size: 12px; display: flex; align-items: center;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;">
+                        <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                        <polyline points="17 6 23 6 23 12"></polyline>
+                    </svg>
+                    +0%
+                </div>
+            </div>
+            <div class="stat-item" style="background: linear-gradient(135deg, #7ED4D2 0%, #5BC4C0 100%); border-radius: 8px; padding: 12px; color: white; position: relative; overflow: hidden;">
+                <div class="stat-value" id="stat-deaths" style="font-size: 24px; font-weight: 700; margin-bottom: 5px;">0</div>
+                <div class="stat-label" style="font-size: 12px;">新增死亡</div>
+                <div class="stat-trend" id="deaths-trend" style="position: absolute; right: 10px; bottom: 10px; font-size: 12px; display: flex; align-items: center;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;">
+                        <polyline points="23 18 13.5 8.5 8.5 13.5 1 6"></polyline>
+                        <polyline points="17 18 23 18 23 12"></polyline>
+                    </svg>
+                    +0%
+                </div>
+            </div>
+            <div class="stat-item" style="background: linear-gradient(135deg, #5BC4C0 0%, #3AB4AD 100%); border-radius: 8px; padding: 12px; color: white; position: relative; overflow: hidden;">
+                <div class="stat-value" id="stat-recovered" style="font-size: 24px; font-weight: 700; margin-bottom: 5px;">0</div>
+                <div class="stat-label" style="font-size: 12px;">新增治愈</div>
+                <div class="stat-trend" id="recovered-trend" style="position: absolute; right: 10px; bottom: 10px; font-size: 12px; display: flex; align-items: center;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;">
+                        <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                        <polyline points="17 6 23 6 23 12"></polyline>
+                    </svg>
+                    +0%
+                </div>
+            </div>
+            <div class="stat-item" style="background: linear-gradient(135deg, #3AB4AD 0%, #1E9A96 100%); border-radius: 8px; padding: 12px; color: white; position: relative; overflow: hidden;">
+                <div class="stat-value" id="stat-death-rate" style="font-size: 24px; font-weight: 700; margin-bottom: 5px;">0%</div>
+                <div class="stat-label" style="font-size: 12px;">死亡率</div>
+                <div class="stat-trend" id="death-rate-trend" style="position: absolute; right: 10px; bottom: 10px; font-size: 12px; display: flex; align-items: center;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;">
+                        <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                        <polyline points="17 6 23 6 23 12"></polyline>
+                    </svg>
+                    +0%
+                </div>
+            </div>
+        </div>
+    </div>
+        <!-- 全国疫情分布饼图 -->
+    <div class="chart-card" style="flex: 1; background: white;  border: 1px solid red; border-radius: 12px; box-shadow: 0 0 8px red; overflow: hidden; position: relative;">
+        <div class="chart-header" style="padding: 15px 20px; border-bottom: 2px solid #FFE74C; background: #d82138;">
+            <h3 style="margin: 0; font-size: 20px; color: white; font-weight: 600;">全国疫情分布</h3>
+        </div>
+        <div id="pie-chart" style="width: 100%; height: 450px;"></div>
+    </div>
+    <!-- 趋势折线图 -->
+<div class="chart-card" style="flex: 1; background: white; border: 1px solid green; border-radius: 12px; box-shadow: 0 0 8px #7ccfa8; margin-bottom:20px;margin-top:20px; overflow: hidden; position: relative;">
+    <div class="chart-header" style="padding: 15px 20px; border-bottom: 2px solid #FFE74C; display: flex; align-items: center; background: #00A2A1;">
+        <h3 style="margin: 0; font-size: 20px; color: white; font-weight: 600;">近14天确诊趋势</h3>
+    </div>
+    <div id="trend-chart" style="height: 490px;"></div>
+</div>
+
+</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.querySelectorAll('.dot-nav-three .dot').forEach(dot => {
+        dot.addEventListener('click', () => {
+            // 1) 切换样式
+            document.querySelectorAll('.dot-nav-three .dot')
+                .forEach(d => d.classList.remove('active'));
+            dot.classList.add('active');
+
+            // 2) 更新度量并重绘
+            currentMetric = dot.dataset.metric;
+            updateChartForMetric();
+        });
+    });
+
+
+</script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // —— DOM 引用 & 全局状态 ——
+        const timeline = document.getElementById('timeline');
+        const dateSpan = document.getElementById('selectedDate');
+        const prevBtn = document.getElementById('prevDay');
+        const nextBtn = document.getElementById('nextDay');
+        const dots = document.querySelectorAll('.dot-nav-three .dot');
+        const loading = document.getElementById('loading');
+        let chinaChart;
+        let latestChinaData = [];
+        let currentMetric = 'confirmed';  // 默认“确诊”
+        const totals = {};
+
+        // —— 生成日期数组 ——
+        const dateRange = (function () {
+            const arr = [];
+            const start = new Date("{{ start_date }}");
+            const end = new Date("{{ end_date }}");
+            for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+                const Y = d.getFullYear();
+                const M = String(d.getMonth() + 1).padStart(2, '0');
+                const D = String(d.getDate()).padStart(2, '0');
+                arr.push({id: parseInt('' + Y + M + D), display: `${Y}-${M}-${D}`});
+            }
+            return arr;
+        })();
+
+        // —— 初始化滑块 ——
+        timeline.min = 0;
+        timeline.max = dateRange.length - 1;
+        timeline.step = 1;
+        timeline.value = timeline.max;
+        dateSpan.textContent = dateRange[timeline.max].display;
+
+        // —— 小写 → 大写 辅助 ——
+        function capitalize(s) {
+            return s.charAt(0).toUpperCase() + s.slice(1);
+        }
+
+const colorSchemes = {
+
+confirmed: {
+    pieces: [
+        { value: 0, color: '#FFFFFF', label: '0 例' },
+        { gte: 1, lte: 100, color: '#e0f7fa', label: '1–100 例' },
+        { gt: 100, lte: 1000, color: '#b2ebf2', label: '100–1k 例' },
+        { gt: 1000, lte: 10000, color: '#80deea', label: '1k–10k 例' },
+        { gt: 10000, lte: 50000, color: '#26c6da', label: '10k–50k 例' },
+        { gt: 50000, color: '#00bcd4', label: '>50k 例' }
+    ],
+    titleColor: '#d82138'
+},
+    deaths: {
+        // 淡紫色系
+        pieces: [
+            { value: 0, color: '#F8F0FC', label: '0 例' },
+            { gte: 1, lte: 100, color: '#EBDCFB', label: '1–100 例' },
+            { gt: 100, lte: 1000, color: '#D0BFFF', label: '100–1k 例' },
+            { gt: 1000, lte: 10000, color: '#B197FC', label: '1k–10k 例' },
+            { gt: 10000, lte: 50000, color: '#9775FA', label: '10k–50k 例' },
+            { gt: 50000, color: '#845EF7', label: '>50k 例' }
+        ],
+        titleColor: '#d82138' // 柔紫
+    },
+    recovered: {
+        // 清新绿色系（保留）
+        pieces: [
+            { value: 0, color: '#E9FBE5', label: '0 例' },
+            { gte: 1, lte: 1000, color: '#C6F6D5', label: '1–1k 例' },
+            { gt: 1000, lte: 10000, color: '#9AE6B4', label: '1k–10k 例' },
+            { gt: 10000, lte: 50000, color: '#68D391', label: '10k–50k 例' },
+            { gt: 50000, lte: 100000, color: '#48BB78', label: '50k–100k 例' },
+            { gt: 100000, color: '#38A169', label: '>100k 例' }
+        ],
+        titleColor: '#d82138' // 清新绿
+    }
+};
+
+
+
+        // —— 根据 currentMetric & 缓存数据，更新 ECharts ——
+        function updateChart(dateText) {
+            if (!chinaChart || !latestChinaData.length) return;
+            const LABELS = {
+                confirmed: {name: '确诊', title: '确诊 CONFIRMED'},
+                deaths: {name: '死亡', title: '死亡 DEATHS'},
+                recovered: {name: '治愈', title: '治愈 RECOVERED'},
+            };
+            const scheme = colorSchemes[currentMetric];
+            const L = LABELS[currentMetric];
+            const T = totals[currentMetric] || {total: 0, daily: 0, current: 0};
+
+            const data = latestChinaData.map(p => ({
+                name: p.name,
+                value: p[`cumulative${capitalize(currentMetric)}`] || 0,
+                daily: p[`daily${capitalize(currentMetric)}Incr`] || 0,
+                current: p[`current${capitalize(currentMetric)}`] || 0,
+                deathRate: p.deathRate || 0,
+                recoveryRate: p.recoveryRate || 0
+            }));
+            console.log(data)
+            // 修改日期格式为 Oct 8th, 2021
+const formatDate = (dateStr) => {
+    const dateObj = new Date(dateStr);
+    const options = { month: 'short', day: 'numeric', year: 'numeric' };
+    const parts = dateObj.toLocaleDateString('en-US', options).split(' ');
+    return `${parts[0]} ${parts[1].replace(',', '')}, ${parts[2]}`;
+};
+const formattedDate = formatDate(dateText);
+            const commonTitle = {
+                left: '2.5%',
+                textStyle: {color: '#df0054', fontSize: 18, fontWeight: 'bold',fontFamily: '"Noto Serif", "Noto Serif SC", Georgia, "Microsoft YaHei", serif'}
+            };
+
+            const chartTitles = [{
+                text: L.title,
+                left: 'center',
+                top: '2%',
+                textStyle: {
+                    fontSize: 20,
+                    fontWeight: 'bold',
+                    fontFamily: '"Noto Serif", "Noto Serif SC", Georgia, "Microsoft YaHei", serif',
+                    color: scheme.titleColor // 使用方案中的标题颜色
+                }
+            }];
+
+            let tooltipFormatter;
+            if (currentMetric === 'confirmed') {
+                tooltipFormatter = params => `
+                    ${params.name}<br/>
+                    累计确诊：${params.data.value !== undefined && params.data.value !== null ? params.data.value + ' 例' : '暂无数据'}<br/>
+                    当日新增：${params.data.daily !== undefined && params.data.daily !== null ? params.data.daily + ' 例' : '暂无数据'}<br/>
+                    现存确诊：${params.data.current !== undefined && params.data.current !== null ? params.data.current + ' 例' : '暂无数据'}
+                `;
+                chartTitles.push(
+                    {text: `${formattedDate}`, ...commonTitle, top: '2.5%', left: '78%'},
+                    {text: `全国累计${L.name}：${T.total} 例`, ...commonTitle, top: '62%', fontWeight: 'bold'},
+                    {text: `全国现存${L.name}：${T.current} 例`, ...commonTitle, top: '69%', fontWeight: 'bold'},
+                    {text: `当日新增：${T.daily} 例`, ...commonTitle, top: '76%', fontWeight: 'bold'}
+                );
+            } else if (currentMetric === 'deaths') {
+                tooltipFormatter = params => `
+                    ${params.name}<br/>
+                    累计死亡：${params.data.value !== undefined && params.data.value !== null ? params.data.value + ' 例' : '暂无数据'}<br/>
+                    死亡率：${params.data.daily !== undefined && params.data.deathRate !== null ? params.data.deathRate + ' %' : '暂无数据'}<br/>
+                    当日新增死亡：${params.data.daily !== undefined && params.data.daily !== null ? params.data.daily + ' 例' : '暂无数据'}
+                `;
+                chartTitles.push(
+                    {text: `${formattedDate}`, ...commonTitle, top: '2.5%', left: '78%'},
+                    {text: `全国当前死亡率：${T.rate} %`, ...commonTitle, top: '62%', fontWeight: 'bold'},
+                    {text: `全国累计${L.name}：${T.total} 例`, ...commonTitle, top: '69%', fontWeight: 'bold'},
+                    {text: `当日新增${L.name}：${T.daily} 例`, ...commonTitle, top: '76%', fontWeight: 'bold'}
+                );
+            } else if (currentMetric === 'recovered') {
+                tooltipFormatter = params => `
+                    ${params.name}<br/>
+                    累计治愈：${params.data.value !== undefined && params.data.value !== null ? params.data.value + ' 例' : '暂无数据'}<br/>
+                    治愈率：${params.data.daily !== undefined && params.data.recoveryRate !== null ? params.data.recoveryRate + ' %' : '暂无数据'}<br/>
+                    当日新增治愈：${params.data.daily !== undefined && params.data.daily !== null ? params.data.daily + ' 例' : '暂无数据'}
+
+                `;
+                chartTitles.push(
+                    {text: `${formattedDate}`, ...commonTitle, top: '2.5%', left: '78%'},
+                    {text: `全国当前治愈率：${T.rate} %`, ...commonTitle, top: '62%', fontWeight: 'bold'},
+                    {text: `全国累计${L.name}：${T.total} 例`, ...commonTitle, top: '69%', fontWeight: 'bold'},
+                    {text: `当日新增${L.name}：${T.daily} 例`, ...commonTitle, top: '76%', fontWeight: 'bold'}
+                );
+            }
+
+            chinaChart.setOption({
+                title: chartTitles,
+                tooltip: {
+                    formatter: tooltipFormatter
+                },
+                visualMap: {
+                    orient: 'vertical',
+                    right: '2.5%',
+                    bottom: '5%',
+                    itemWidth: 26,
+                    itemHeight: 22,
+                    itemGap: 20,
+                    pieces: scheme.pieces, // 使用当前指标的颜色方案
+                    textStyle: {color: '#df0054', fontSize: 18, fontWeight: 'bold',fontFamily: '"Noto Serif", "Noto Serif SC", Georgia, "Microsoft YaHei", serif'}
+                },
+                series: [{data}]
+            }, {notMerge: false});
+        }
+
+        // —— 向后端拉数据并缓存，拉完后第一次绘制 ——
+        async function loadData(dateId) {
+            loading.style.display = 'inline-block';
+            try {
+                const res = await fetch(`/display_china/${dateId}`);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const js = await res.json();
+                const {
+                    date,
+                    totalConfirmed, totalDailyIncr, totalCurrentConfirmed,
+                    totalDeaths, totalDailyDeaths, deathRate,
+                    totalRecovered, totalDailyRecovered, recoveryRate,
+                    china
+                } = js;
+                latestChinaData = china;
+                totals.confirmed = {total: totalConfirmed, daily: totalDailyIncr, current: totalCurrentConfirmed};
+                totals.deaths = {
+                    total: totalDeaths, daily: totalDailyDeaths, rate: deathRate
+                };
+                totals.recovered = {
+                    total: totalRecovered,
+                    daily: totalDailyRecovered,
+                    rate: recoveryRate
+                };
+                updateChart(date);
+            } catch (err) {
+                console.error('[加载失败]', err);
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        // —— 滑块切换 ——
+        let inputTimer;
+        timeline.addEventListener('input', e => {
+            const idx = +e.target.value;
+            dateSpan.textContent = dateRange[idx].display;
+            clearTimeout(inputTimer);
+            inputTimer = setTimeout(() => loadData(dateRange[idx].id), 300);
+        });
+
+        // —— 上/下一天 按钮 ——
+        function changeDay(delta) {
+            let v = +timeline.value + delta;
+            v = Math.max(+timeline.min, Math.min(+timeline.max, v));
+            timeline.value = v;
+            timeline.dispatchEvent(new Event('input'));
+        }
+
+        prevBtn.addEventListener('click', () => changeDay(-1));
+        nextBtn.addEventListener('click', () => changeDay(1));
+        // 长按加速
+        let holdTimer, holdCount;
+
+        function startHold(delta) {
+            holdCount = 0;
+
+            function step() {
+                holdCount++;
+                changeDay(delta * (1 + Math.floor(holdCount / 10)));
+                holdTimer = setTimeout(step, Math.max(50, 200 - holdCount * 15));
+            }
+
+            step();
+        }
+
+        prevBtn.addEventListener('mousedown', () => startHold(-1));
+        nextBtn.addEventListener('mousedown', () => startHold(1));
+        ['mouseup', 'mouseleave'].forEach(evt => {
+            prevBtn.addEventListener(evt, () => clearTimeout(holdTimer));
+            nextBtn.addEventListener(evt, () => clearTimeout(holdTimer));
+        });
+
+        // —— 三个 dot 点击切换 metric ——
+        dots.forEach(dot => {
+            dot.addEventListener('click', () => {
+                dots.forEach(d => d.classList.remove('active'));
+                dot.classList.add('active');
+                currentMetric = dot.dataset.metric;
+                updateChart(dateSpan.textContent);
+            });
+        });
+
+        // —— 初始化 ECharts & 首次拉数据 ——
+        (async function initChart() {
+
+            const resp = await fetch("{{ url_for('static', filename='assets/json/china.json') }}");
+            const geo = await resp.json();
+            echarts.registerMap('china', geo);
+            console.log(geo)
+            chinaChart = echarts.init(document.getElementById('china-container'));
+            chinaChart.setOption({
+                title: {
+                    text: '中国疫情分布图',
+                    left: 'center',
+                    textStyle: {color: '#333', fontSize: 25, fontWeight: 'bold'}
+                },
+                visualMap: {
+                    type: 'piecewise',
+                    pieces: [
+                        {value: 0, color: '#FFFFFF'},
+                        {gte: 1, lte: 100, color: '#FFFACD'},
+                        {gt: 100, lte: 1000, color: '#FFE699'},
+                        {gt: 1000, lte: 5000, color: '#F4B183'},
+                        {gt: 5000, lte: 10000, color: '#ED7D31'},
+                        {gt: 10000, lte: 50000, color: '#C00000'},
+                        {gt: 50000, color: '#800000'}
+                    ],
+                    orient: 'horizontal', left: 'center', bottom: 20, textStyle: {color: '#666'}
+                },
+                tooltip: {trigger: 'item'},
+                series: [{
+                    type: 'map',
+                    map: 'china',
+                    roam: true,
+                    zoom: 1,
+                    label: {show: true, color: 'black', fontSize: 12, fontWeight: '500',fontFamily: '"Noto Serif", "Noto Serif SC", Georgia, "Microsoft YaHei", serif'},
+                    itemStyle: {areaColor: '#FFFFFF', borderColor: '#666', borderWidth: 0.8},
+                    emphasis: {
+                        label: {
+                            show: true,
+                            color: '#C82423', fontSize: 14, fontWeight: 'bold',fontFamily: '"Noto Serif", "Noto Serif SC", Georgia, "Microsoft YaHei", serif'
+                        }, itemStyle: {areaColor: '#FFE74C', borderColor: '#d82138'}
+                    },
+                    select: {
+                        label: {
+                            show: true,
+                            color: '#444', fontSize: 14, fontWeight: 'bold',fontFamily: '"Noto Serif", "Noto Serif SC", Georgia, "Microsoft YaHei", serif'
+                        }, itemStyle: {areaColor: '#FFE4B5', borderColor: '#FFA500'}
+                    },
+                    data: []  // 初始空
+                }]
+            });
+
+            // 首次拉取确诊数据
+            loadData(dateRange[timeline.max].id);
+
+            window.addEventListener('resize', () => chinaChart.resize());
+        })();
+    });
+// 初始化右侧图表
+function initRightCharts() {
+    // 获取7天数据
+    fetch('/get_china_last_7days')
+        .then(response => response.json())
+        .then(data => {
+            const nationalData = data.national_data;
+            const provincesData = data.provinces_data;
+            const latestStats = data.latest_stats;
+
+            // 更新统计卡片
+            updateStatsCard(latestStats, nationalData);
+
+            // 初始化折线图
+            initTrendChart(nationalData);
+
+            // 初始化饼图
+            initPieChart(provincesData);
+        })
+        .catch(error => {
+            console.error('获取数据失败:', error);
+        });
+}
+
+// 更新统计卡片
+function updateStatsCard(latestStats, nationalData) {
+    // 更新数值
+    document.getElementById('stat-confirmed').textContent = latestStats.new_confirmed;
+    document.getElementById('stat-deaths').textContent = latestStats.new_deaths;
+    document.getElementById('stat-recovered').textContent = latestStats.new_recovered;
+    document.getElementById('stat-death-rate').textContent = latestStats.death_rate + '%';
+
+    // 计算趋势变化
+    if (nationalData.length >= 2) {
+        const prevDay = nationalData[nationalData.length - 2];
+
+        // 确诊趋势
+        const confirmedTrend = calculateTrend(latestStats.new_confirmed, prevDay.new_confirmed);
+        updateTrendElement('confirmed-trend', confirmedTrend);
+
+        // 死亡趋势
+        const deathsTrend = calculateTrend(latestStats.new_deaths, prevDay.new_deaths);
+        updateTrendElement('deaths-trend', deathsTrend);
+
+        // 治愈趋势
+        const recoveredTrend = calculateTrend(latestStats.new_recovered, prevDay.new_recovered);
+        updateTrendElement('recovered-trend', recoveredTrend);
+
+        // 死亡率趋势
+        const deathRateTrend = calculateTrend(latestStats.death_rate, prevDay.death_rate);
+        updateTrendElement('death-rate-trend', deathRateTrend);
+    }
+
+    // 添加动画效果
+    document.querySelectorAll('.stat-item').forEach((item, index) => {
+        item.style.opacity = '0';
+        item.style.transform = 'translateY(20px)';
+
+        setTimeout(() => {
+            item.style.transition = 'all 0.5s ease-out';
+            item.style.opacity = '1';
+            item.style.transform = 'translateY(0)';
+        }, 300 + index * 100);
+    });
+}
+
+// 计算趋势
+function calculateTrend(current, previous) {
+    if (previous === 0) return { value: 0, direction: 'up' };
+    const change = ((current - previous) / previous) * 100;
+    return {
+        value: Math.abs(Math.round(change)),
+        direction: change >= 0 ? 'up' : 'down'
+    };
+}
+
+// 更新趋势元素
+function updateTrendElement(elementId, trend) {
+    const element = document.getElementById(elementId);
+    const icon = element.querySelector('svg');
+    const text = trend.value + '%';
+
+    if (trend.direction === 'up') {
+        icon.innerHTML = '<polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline>';
+    } else {
+        icon.innerHTML = '<polyline points="23 18 13.5 8.5 8.5 13.5 1 6"></polyline><polyline points="17 18 23 18 23 12"></polyline>';
+    }
+
+    element.lastChild.textContent = text;
+}
+
+function initTrendChart(data) {
+    const trendChart = echarts.init(document.getElementById('trend-chart'));
+
+    // 提取日期和数据
+    const dates = data.map(item => item.date.split('/').slice(1).join('/'));
+    const confirmed = data.map(item => item.total_confirmed);
+
+    // 基于您提供的渐变色彩方案
+const colorPalette = {
+    gradient: new echarts.graphic.LinearGradient(1, 1, 1, 0, [
+        { offset: 0, color: '#FF0000' },   // 红
+        { offset: 0.17, color: '#FF7F00' }, // 橙
+        { offset: 0.34, color: '#FFFF00' }, // 黄
+        { offset: 0.51, color: '#00FF00' }, // 绿
+        { offset: 0.68, color: '#0000FF' }, // 蓝
+        { offset: 0.85, color: '#4B0082' }, // 靛
+        { offset: 1, color: '#8B00FF' }     // 紫
+    ]),
+    pointColor: '#b2ebf2',
+    axisLine: 'rgba(46, 91, 157, 0.2)',
+    axisText: 'black',
+    gridLine: 'rgba(46, 91, 157, 0.08)',
+    tooltipBg: 'rgba(255, 255, 255, 0.96)'
+};
+
+
+    trendChart.setOption({
+        backgroundColor: 'transparent',
+        tooltip: {
+            trigger: 'axis',
+            axisPointer: {
+                type: 'line',
+                lineStyle: {
+                    color: 'rgba(94, 136, 223, 0.3)',
+                    width: 2
+                }
+            },
+            backgroundColor: colorPalette.tooltipBg,
+            borderWidth: 0,
+            borderRadius: 8,
+            padding: [12, 18],
+            textStyle: {
+                color: '#2e5b9d',
+                fontWeight: 'bold',
+                fontSize: 13,
+                fontFamily: '"Noto Serif", "Noto Serif SC", Georgia, "Microsoft YaHei", serif'
+            },
+            extraCssText: 'box-shadow: 0 6px 12px rgba(46, 91, 157, 0.15);',
+            formatter: function(params) {
+                return `
+                    <div style="margin-bottom:8px;font-size:14px;color:#2e5b9d;border-bottom:1px solid rgba(46,91,157,0.1);padding-bottom:6px;">
+                        ${params[0].axisValue}
+                    </div>
+                    <div style="display:flex;align-items:center;">
+                        <span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${colorPalette.gradient};margin-right:10px;"></span>
+                        <span style="flex:1;">确诊病例：</span>
+                        <span style="font-weight:800;color:#FF4B68;">${params[0].value.toLocaleString()} 例</span>
+                    </div>
+                `;
+            }
+        },
+        grid: {
+            left: '3%',
+            right: '4%',
+            bottom: '8%',
+            top: '12%',
+            containLabel: true
+        },
+        xAxis: {
+            type: 'category',
+            data: dates,
+            axisLine: {
+                lineStyle: {
+                    color: colorPalette.axisLine,
+                    width: 1.5
+                }
+            },
+            axisTick: {
+                alignWithLabel: true,
+                lineStyle: {
+                    color: colorPalette.axisLine
+                },
+                length: 4
+            },
+            axisLabel: {
+                color: colorPalette.axisText,
+                fontSize: 11,
+                interval: 0,
+                rotate: 30,
+                margin: 15,
+                fontFamily: '"Noto Serif", "Noto Serif SC", Georgia, "Microsoft YaHei", serif'
+            }
+        },
+        yAxis: {
+            type: 'value',
+            min: function(value) {
+                return Math.floor(value.min);
+            },
+            axisLine: {
+                show: true
+            },
+            axisTick: {
+                show: true
+            },
+            axisLabel: {
+                color: colorPalette.axisText,
+                fontSize: 11,
+                fontFamily: '"Noto Serif", "Noto Serif SC", Georgia, "Microsoft YaHei", serif'
+            },
+            splitLine: {
+                lineStyle: {
+                    color: colorPalette.gridLine,
+                    width: 1.2,
+                    type: 'dashed'
+                }
+            }
+        },
+        series: [{
+            name: '确诊病例',
+            type: 'line',
+            symbol: 'circle',
+            symbolSize: 8,
+            showSymbol: true,
+            lineStyle: {
+                width: 3.5,
+                color: colorPalette.gradient,
+                shadowColor: 'rgba(94, 136, 223, 0.4)',
+                shadowBlur: 12,
+                shadowOffsetY: 6
+            },
+            itemStyle: {
+                color: colorPalette.pointColor,
+                borderColor: '#fff',
+                borderWidth: 2,
+                shadowColor: 'rgba(84, 168, 238, 0.5)',
+                shadowBlur: 8
+            },
+            emphasis: {
+                scale: 1.2,
+                itemStyle: {
+                    color: '#fff',
+                    borderColor: colorPalette.pointColor,
+                    borderWidth: 3,
+                    shadowBlur: 12
+                }
+            },
+            data: confirmed,
+            smooth: 0.3,
+            animationDuration: 1800,
+            animationEasing: 'cubicOut'
+        }],
+        xAxis: {
+            type: 'category',
+            data: dates,
+            axisLabel: {
+                interval: 0, // 强制显示所有标签
+                rotate: dates.length > 15 ? 45 : 0, // 数据点多时旋转45度
+                formatter: function(value, index) {
+                    // 只显示每3天的日期，避免拥挤
+                    return index % 3 === 0 ? value : '';
+                }
+            }
+        },
+dataZoom: [{
+    type: 'slider',
+    show: true,
+    start: 0,
+    end: 100,
+    height: 8,
+    bottom: 20,
+    backgroundColor: 'rgba(0,0,0,0)', // 背景透明
+    fillerColor: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+        { offset: 0, color: '#FF0000' },   // 红
+        { offset: 0.17, color: '#FF7F00' }, // 橙
+        { offset: 0.34, color: '#FFFF00' }, // 黄
+        { offset: 0.51, color: '#00FF00' }, // 绿
+        { offset: 0.68, color: '#0000FF' }, // 蓝
+        { offset: 0.85, color: '#4B0082' }, // 靛
+        { offset: 1, color: '#8B00FF' }     // 紫
+    ]),
+    borderColor: 'transparent',
+
+    // 自定义只有左侧滑块，右侧固定（通过 handleSize 为 0 实现）
+    handleSize: 10, // 隐藏默认滑块
+
+    // 使用左侧矩形框包三角箭头 >> 样式
+    handleIcon: 'path://M0,0 L10,5 L0,10 L3,5 Z', // 自定义为箭头包矩形
+    handleStyle: {
+        color: '#FFFFFF',
+        borderColor: '#000000',
+        borderWidth: 1,
+        shadowBlur: 5,
+        shadowColor: '#FFFFFF',
+        shadowOffsetX: 0,
+        shadowOffsetY: 2
+    },
+
+    textStyle: {
+        color: '#444'
+    },
+
+    dataBackground: {
+        lineStyle: {
+            color: '#ddd'
+        },
+        areaStyle: {
+            color: 'rgba(200, 200, 200, 0.3)'
+        }
+    }
+}]
+
+
+    });
+
+    // 高级响应式处理
+    const handleResize = () => {
+        const container = document.getElementById('trend-chart');
+        trendChart.resize();
+
+        const width = container.offsetWidth;
+        const options = {
+            xAxis: {
+                axisLabel: {
+                    rotate: width < 600 ? 45 : 30,
+                    fontSize: width < 500 ? 10 : 11
+                }
+            }
+        };
+
+        if (width < 400) {
+            options.grid = {
+                left: '5%',
+                right: '8%',
+                bottom: '12%'
+            };
+            options.yAxis.axisLabel.formatter = value => value >= 10000 ? (value/10000).toFixed(0) + '万' : value;
+        }
+
+        trendChart.setOption(options);
+    };
+
+    window.addEventListener('resize', handleResize);
+    setTimeout(handleResize, 0);
+}
+
+// 初始化饼图
+function initPieChart(data) {
+    const pieChart = echarts.init(document.getElementById('pie-chart'));
+
+    pieChart.setOption({
+        backgroundColor: 'transparent',
+        tooltip: {
+            trigger: 'item',
+            formatter: '{a} <br/>{b}: {c} ({d}%)'
+        },
+        legend: {
+            orient: 'vertical',
+            right: 10,
+            top: 'center',
+            data: data.map(item => item.name),
+            textStyle: {
+                color: '#666',
+                fontSize: 16,
+                fontFamily: '"Noto Serif", "Noto Serif SC", Georgia, "Microsoft YaHei", serif'
+            }
+        },
+        series: [
+            {
+                name: '疫情分布',
+                type: 'pie',
+                radius: ['40%', '70%'],
+                center: ['40%', '50%'],
+                avoidLabelOverlap: false,
+                itemStyle: {
+                    borderRadius: 10,
+                    borderColor: '#fff',
+                    borderWidth: 2
+                },
+                label: {
+                        show: true,
+                        position: 'center',
+                        fontSize: '18',
+                        fontWeight: 'bold',
+                        fontFamily: '"Noto Serif", "Noto Serif SC", Georgia, "Microsoft YaHei", serif',
+                        formatter: '{b}\n{c} ({d}%)'
+                },
+                emphasis: {
+                    label: {
+                        show: true,
+                        fontSize: '18',
+                        position: 'left',
+                        fontWeight: 'bold',
+                        fontFamily: '"Noto Serif", "Noto Serif SC", Georgia, "Microsoft YaHei", serif',
+                        formatter: '{b}\n{c} ({d}%)'
+                    }
+                },
+                labelLine: {
+                    show: false
+                },
+            // 更新饼图配色
+data: data.map((item, index) => ({
+    value: item.value,
+    name: item.name,
+    itemStyle: {
+        color: [
+            '#FF4757', '#FF6348', '#FF7F50',
+            '#FFA502', '#FFB142', '#FFD700',
+            '#7BED9F', '#2ED573', '#1DD1A1',
+            '#17C0EB', '#7158e2', '#FD79A8'
+        ][index % 12]
+    }
+})),
+                animationType: 'scale',
+                animationEasing: 'elasticOut',
+                animationDelay: function (idx) {
+                    return Math.random() * 200;
+                }
+            }
+        ]
+    });
+
+    window.addEventListener('resize', function() {
+        pieChart.resize();
+    });
+}
+
+// 在DOM加载完成后初始化图表
+document.addEventListener('DOMContentLoaded', function() {
+    initRightCharts();
+});
+</script>
+
+        <script>
+        // 获取轮播图相关元素
+        const carouselItems = document.querySelectorAll('.carousel-item');
+        const dots = document.querySelectorAll('.dot_1');
+        const prevBtn = document.querySelector('.prev');
+        const nextBtn = document.querySelector('.next');
+        let currentIndex = 0;
+
+        // 初始化轮播图，显示第一张图片
+        function initCarousel() {
+            showSlide(currentIndex);
+        }
+
+        // 显示指定索引的轮播图
+        function showSlide(index) {
+            carouselItems.forEach((item, i) => {
+                if (i === index) {
+                    item.style.opacity = 1;
+                } else {
+                    item.style.opacity = 0;
+                }
+            });
+            dots.forEach((dot_1, i) => {
+                if (i === index) {
+                    dot_1.classList.add('active');
+                } else {
+                    dot_1.classList.remove('active');
+                }
+            });
+        }
+
+        // 切换到下一张轮播图
+        function nextSlide() {
+            currentIndex = (currentIndex + 1) % carouselItems.length;
+            showSlide(currentIndex);
+        }
+
+        // 切换到上一张轮播图
+        function prevSlide() {
+            currentIndex = (currentIndex - 1 + carouselItems.length) % carouselItems.length;
+            showSlide(currentIndex);
+        }
+
+        // 为指示点添加点击事件
+        dots.forEach((dot, index) => {
+            dot.addEventListener('click', () => {
+                showSlide(index);
+                currentIndex = index;
+            });
+        });
+
+        // 为左右切换按钮添加点击事件
+        prevBtn.addEventListener('click', prevSlide);
+        nextBtn.addEventListener('click', nextSlide);
+
+        // 自动播放轮播图
+        setInterval(nextSlide, 5000);
+
+        // 页面加载完成后初始化轮播图
+        window.onload = initCarousel;
+        </script>
+
+{% endblock content %}

@@ -1,0 +1,443 @@
+{% extends "layouts/base.html" %}
+{% block title %}全球疫情概况{% endblock %}
+{% block content %}
+    <style>
+        .card-body{
+            padding:10px;
+<!--        border:1px solid #00A2A1;-->
+<!--        box-shadow: 0 0 8px #bef1ed;-->
+        }
+        .map-box {
+            width: 100%;
+            height: 100%;
+            border: 1px solid red;
+            background: linear-gradient(45deg, #f5f5f5 0%, #ffffff 100%);
+            box-shadow: 0 0 8px #bef1ed;
+        }
+
+        /* 包裹 slider 和按钮的容器 */
+        .slider-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin: 0.5rem 0;
+        }
+
+        /* 通用按钮样式（更新） */
+        .slider-btn {
+            background-color: #D82138;
+            border: none;
+            border-radius: 0.5rem; /* 圆角加大，更圆滑 */
+            width: 1.6rem;
+            height: 1.6rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background-color 0.15s, transform 0.1s, box-shadow 0.15s;
+        }
+
+        .slider-btn:hover {
+            background-color:#FF4B68; /* 悬停时略微加深 */
+        }
+
+        .slider-btn:focus,
+        .slider-btn:active {
+            background-color: #D82138; /* 点击/选中时更明显 */
+            box-shadow: 0 0 0 3px rgba(24, 86, 153, 0.5);
+            transform: translateY(1px); /* 轻微按下效果 */
+            outline: none;
+        }
+
+        /* 让 SVG 图标根据按钮大小自适应 */
+        .slider-btn svg {
+            width: 1.2rem;
+            height: 1.2rem;
+            fill: #fff;
+        }
+
+        .slider-wrapper input[type="range"] {
+            flex: 1;
+            margin: 0;
+        }
+
+        .cy_to_r {
+            margin-left: auto;
+        }
+
+        .dot-nav-three {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            gap: .5rem;
+            padding: .25rem;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: .5rem;
+        }
+
+        .dot-nav-three .dot {
+            width: .6rem;
+            height: .6rem;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #fff;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: width .2s, background-color .2s;
+        }
+
+        .dot-nav-three .dot.active {
+            width: 1.5rem;
+            border-radius: .3rem;
+            background: rgb(var(--Color-BJFU-221002224));
+        }
+
+        .to_lef_cy {
+            width: calc(100% - 35rem) !important;
+            margin-right: auto;
+        }
+    </style>
+    <div class="row">
+        <div class="col-12 col-lg-6">
+            <div class="card border-0 shadow">
+                <div class="">
+                    <div class="card-body">
+                        <div class="mt-2 mb-3 d-flex align-items-center">
+                            <label for="timeline" class="mt-2"
+                                   style="font-weight: bold;font-size: 1rem">选择查询日期：</label>
+                            <div class="slider-wrapper me-5">
+                                <button id="prevDay" class="slider-btn" type="button" aria-label="上一天">
+                                    <svg viewBox="0 0 16 16">
+                                        <path d="M11 1 3 8l8 7V1z"/>
+                                    </svg>
+                                </button>
+
+                                <input type="range" id="timeline" class="form-range"/>
+
+                                <button id="nextDay" class="slider-btn" type="button" aria-label="下一天">
+                                    <svg viewBox="0 0 16 16">
+                                        <path d="M5 1v14l8-7L5 1z"/>
+                                    </svg>
+                                </button>
+                            </div>
+                            <span id="selectedDate" style="margin-left: 0.5rem; font-weight: bold;">2020-01-20</span>
+                            <div id="loading"
+                                 class="spinner-border text-primary"
+                                 style="display: none; margin-left: 0.5rem;">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <div class="ms-auto d-flex gap-2 cy_to_r dot-nav-three">
+                                <span class="dot active" data-metric="confirmed"></span>
+                                <span class="dot" data-metric="deaths"></span>
+                                <span class="dot" data-metric="recovered"></span>
+                            </div>
+                        </div>
+                        <div id="world-container" class="map-box"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        let worldChart;
+        document.addEventListener('DOMContentLoaded', function () {
+            // —— DOM 引用 & 全局状态 ——
+            const timeline = document.getElementById('timeline');
+            const dateSpan = document.getElementById('selectedDate');
+            const prevBtn = document.getElementById('prevDay');
+            const nextBtn = document.getElementById('nextDay');
+            const loading = document.getElementById('loading');
+            const dots = document.querySelectorAll('.dot-nav-three .dot');
+
+            let latestData = [];
+            let totals = {};
+            let dateRangesFromServer = null;   // 从后端返回的所有指标的起止日期
+            let sliderDateRange = [];          // 当前指标对应的日期列表 [{id, display}, …]
+            let currentMetric = 'confirmed';   // 默认使用的指标
+
+            // —— 根据 metric 从后端 dateRanges 构造滑条用的日期数组 ——
+            function buildSliderDateRange(metric) {
+                const range = dateRangesFromServer[metric];
+                const start = new Date(range.start);
+                const end = new Date(range.end);
+                const arr = [];
+                for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+                    const Y = d.getFullYear();
+                    const M = String(d.getMonth() + 1).padStart(2, '0');
+                    const D = String(d.getDate()).padStart(2, '0');
+                    arr.push({
+                        id: parseInt(`${Y}${M}${D}`),
+                        display: `${Y}-${M}-${D}`
+                    });
+                }
+                return arr;
+            }
+
+            // —— 重建滑条范围，并把当前选中日期（id）截取到最近边界 ——
+            function updateTimeline(metric, selectedDateId) {
+                sliderDateRange = buildSliderDateRange(metric);
+                timeline.min = 0;
+                timeline.max = sliderDateRange.length - 1;
+
+                // 查找 selectedDateId 在新数组中的索引
+                let idx = sliderDateRange.findIndex(item => item.id === selectedDateId);
+                if (idx === -1) {
+                    // 不在范围内则截取到最近边界
+                    if (selectedDateId < sliderDateRange[0].id) {
+                        idx = 0;
+                    } else {
+                        idx = sliderDateRange.length - 1;
+                    }
+                }
+                timeline.value = idx;
+                dateSpan.textContent = sliderDateRange[idx].display;
+            }
+
+            // —— 真正向后端拉数据并更新图表 & 滑条 ——
+            let loadTimer;
+
+            async function loadData(dateId, skipSliderUpdate = false) {
+                loading.style.display = 'inline-block';
+                try {
+                    const res = await fetch(`/display_world/${dateId}`);
+                    if (!res.ok) throw new Error(res.status);
+                    const js = await res.json();
+                    latestData = js.world;
+                    totals = {
+                        confirmed: {total: js.totalConfirmed, daily: js.totalDailyIncr},
+                        deaths: {total: js.totalDeaths, daily: js.totalDailyDeaths},
+                        recovered: {total: js.totalRecovered, daily: js.totalDailyRecovered}
+                    };
+                    dateRangesFromServer = js.dateRanges;
+
+                    // 仅首次加载或指标切换时重建滑条
+                    if (!skipSliderUpdate) {
+                        const selId = parseInt(js.date.replace(/-/g, ''));
+                        updateTimeline(currentMetric, selId);
+                    }
+                    updateChart(js.date);
+                } catch (e) {
+                    console.error('加载失败', e);
+                } finally {
+                    loading.style.display = 'none';
+                }
+            }
+
+            // —— 更新 ECharts 世界图的方法 ——
+            function updateChart(dateText) {
+                if (!worldChart || !latestData.length) return;
+                const L = {
+                    confirmed: {name: 'Confirmed', title: 'Global Cumulative Confirmed Distribution Map'},
+                    deaths: {name: 'Deaths', title: 'Global Cumulative Deaths Distribution Map'},
+                    recovered: {name: 'Recovered', title: 'Global Cumulative Recovered Distribution Map'}
+                }[currentMetric];
+
+                const scheme = {
+                    confirmed: {
+                        pieces: [
+                            {value: 0, color: '#FFFFFF', label: '0 Case'},
+                            {gte: 1, lte: 10000, color: '#FFFACD', label: '1–10k Cases'},
+                            {gt: 10000, lte: 100000, color: '#FFE699', label: '10k–100k Cases'},
+                            {gt: 100000, lte: 1000000, color: '#F4B183', label: '100k–1M Cases'},
+                            {gt: 1000000, lte: 5000000, color: '#ED7D31', label: '1M–5M Cases'},
+                            {gt: 5000000, color: '#C00000', label: '>5M Cases'}
+                        ], titleColor: '#B22222'
+                    },
+                    deaths: {
+                        pieces: [
+                            {value: 0, color: '#F8F9FA', label: '0 Case'},
+                            {gte: 1, lte: 1000, color: '#DEE2E6', label: '1–1k Cases'},
+                            {gt: 1000, lte: 10000, color: '#ADB5BD', label: '1k–10k Cases'},
+                            {gt: 10000, lte: 50000, color: '#6C757D', label: '10k–50k Cases'},
+                            {gt: 50000, color: '#212529', label: '>50k Cases'}
+                        ], titleColor: '#2F4F4F'
+                    },
+                    recovered: {
+                        pieces: [
+                            {value: 0, color: '#EBFBEE', label: '0 Case'},
+                            {gte: 1, lte: 10000, color: '#D3F9D8', label: '1–10k Cases'},
+                            {gt: 10000, lte: 100000, color: '#B2F2BB', label: '10k–100k Cases'},
+                            {gt: 100000, color: '#2F9E44', label: '>100k Cases'}
+                        ], titleColor: '#228B22'
+                    }
+                }[currentMetric];
+
+                const data = latestData.map(c => ({
+                    name: c.name,
+                    value: c[`cumulative${currentMetric.charAt(0).toUpperCase() + currentMetric.slice(1)}`] || 0,
+                    daily: c[`daily${currentMetric.charAt(0).toUpperCase() + currentMetric.slice(1)}Incr`] || 0
+                }));
+
+                const titles = [
+                    {
+                        text: L.title,
+                        left: 'center',
+                        top: '5',
+                        textStyle: {color: '#d82138',fontSize: 24, color: scheme.titleColor, fontWeight: 'bold', fontFamily: '"Noto Serif", "Noto Serif SC", Georgia, "Microsoft YaHei", serif'}
+                    },
+                    {text: `Current Date: ${dateText}`, left: '2.5%', top: '75%', textStyle: {color: '#df0054',fontSize: 18,fontFamily: '"Noto Serif", "Noto Serif SC", Georgia, "Microsoft YaHei", serif'}},
+                    {
+                        text: `Global Total ${L.name}: ${totals[currentMetric].total} Cases`,
+                        left: '2.5%',
+                        top: '82%',
+                        textStyle: {color: '#df0054',fontSize: 18, fontFamily: '"Noto Serif", "Noto Serif SC", Georgia, "Microsoft YaHei", serif'}
+                    },
+                    {
+                        text: `New Cases Today: ${totals[currentMetric].daily} Cases`,
+                        left: '2.5%',
+                        top: '89%',
+                        textStyle: {color: '#df0054',fontSize: 18,fontFamily: '"Noto Serif", "Noto Serif SC", Georgia, "Microsoft YaHei", serif'}
+                    }
+                ];
+
+
+                worldChart.setOption({
+                    title: titles,
+                    visualMap: {orient: 'horizontal', bottom: 10, pieces: scheme.pieces, textStyle: {color: '#df0054',fontSize: 18,fontFamily: '"Noto Serif", "Noto Serif SC", Georgia, "Microsoft YaHei", serif'}},
+                    tooltip: {
+                        formatter: params =>
+                            `${params.name}<br/>Cumulative ${L.name}: ${params.data.value} Cases<br/>New: ${params.data.daily} Cases`
+                    },
+                    series: [{data}]
+                }, {notMerge: false});
+            }
+
+            // —— 滑条事件 ——
+            timeline.addEventListener('input', e => {
+                const idx = +e.target.value;
+                dateSpan.textContent = sliderDateRange[idx].display;
+                clearTimeout(loadTimer);
+                loadTimer = setTimeout(() => loadData(sliderDateRange[idx].id, true), 300);
+            });
+
+            // —— 上/下一天按钮 & 长按加速 ——
+            function changeDay(d) {
+                let v = +timeline.value + d;
+                v = Math.max(+timeline.min, Math.min(+timeline.max, v));
+                timeline.value = v;
+                timeline.dispatchEvent(new Event('input'));
+            }
+
+            let holdTimer, holdCount;
+
+            function startHold(d) {
+                holdCount = 0;
+                (function step() {
+                    changeDay(d * (1 + Math.floor(holdCount / 10)));
+                    holdCount++;
+                    holdTimer = setTimeout(step, Math.max(50, 200 - holdCount * 15));
+                })();
+            }
+
+            function clearHold() {
+                clearTimeout(holdTimer);
+            }
+
+            prevBtn.addEventListener('click', () => changeDay(-1));
+            nextBtn.addEventListener('click', () => changeDay(1));
+            prevBtn.addEventListener('mousedown', () => startHold(-1));
+            nextBtn.addEventListener('mousedown', () => startHold(1));
+            ['mouseup', 'mouseleave'].forEach(evt => {
+                prevBtn.addEventListener(evt, clearHold);
+                nextBtn.addEventListener(evt, clearHold);
+            });
+
+            // —— 三指标切换 ——
+            dots.forEach(dot => {
+                dot.addEventListener('click', () => {
+                    dots.forEach(d => d.classList.remove('active'));
+                    dot.classList.add('active');
+                    const newMetric = dot.dataset.metric;
+                    if (newMetric === currentMetric) return;
+                    currentMetric = newMetric;
+                    // 切换指标时重新定位滑条并拉取数据
+                    const curDateId = sliderDateRange[+timeline.value].id;
+                    updateTimeline(currentMetric, curDateId);
+                    loadData(sliderDateRange[+timeline.value].id, true);
+                });
+            });
+
+            // —— 初始化 ECharts 世界地图、并首次加载 ——
+            (async function init() {
+                try {
+                    const resp = await fetch("{{ url_for('static', filename='assets/json/world.json') }}");
+                    const raw = await resp.json();
+                    echarts.registerMap('world', raw);
+                    // 提取所有国家名
+                    const countryNames = raw.features.map(f => f.properties.name);
+
+                    console.log(countryNames);
+                    worldChart = echarts.init(document.getElementById('world-container'));
+                    worldChart.setOption({
+                        title: {text: 'Global COVID-19 Map', left: 'center'},
+                        visualMap: {
+                            itemWidth: 30, // 色块宽度增大
+                            itemHeight: 18, // 色块高度增大
+                            itemGap: 10, // 分段间距增大
+                            textStyle: {fontSize: 18,fontFamily: '"Noto Serif", "Noto Serif SC", Georgia, "Microsoft YaHei", serif'}, // 文字大小增大
+                            left: '2.5%',
+                            type: 'piecewise',
+                            bottom: '5%',
+                            orient: 'horizontal',
+                        },
+                        tooltip: {trigger: 'item'},
+                        series: [{
+                            type: 'map',
+                            map: 'world',
+                            roam: true,
+                            zoom: 1.05,
+                            label: {show: false},
+                            itemStyle: {borderColor: '#666'}
+                        }]
+                    });
+                    // 首次用任意合理的初始日期拉数据（这里用最大值）
+                    // 由于 dateRangesFromServer 尚未初始化，先用模板渲染的 end_date
+                    const initEndId = parseInt("{{ end_date }}".replace(/-/g, ''));
+                    loadData(initEndId, false).then(() => {
+                        // 等 loadData 完成后，强制把滑条置于末尾
+                        timeline.value = timeline.max;
+                        dateSpan.textContent = sliderDateRange[timeline.max].display;
+                    });
+                    window.addEventListener('resize', () => worldChart.resize());
+                    // ✅ 2. 监听 sidebar class 变化，触发 resize
+                    const sidebar = document.getElementById('app-sidebar');
+                    let lastSidebarHidden = sidebar.classList.contains('hidden');
+
+                    const observer = new MutationObserver(() => {
+                        const nowHidden = sidebar.classList.contains('hidden');
+                        if (nowHidden !== lastSidebarHidden) {
+                            lastSidebarHidden = nowHidden;
+
+                            console.log('[监听] sidebar class changed → fullwidth:', nowHidden);
+
+                            // 延迟触发 resize（等待 DOM 完成重排）
+                            worldChart.showLoading({
+                                text: '布局调整中...',
+                                color: '#007bff',
+                                textColor: '#333',
+                                maskColor: 'rgba(255,255,255,0.6)',
+                                zlevel: 0
+                            });
+                            setTimeout(() => {
+                                const container = document.getElementById('world-container');
+                                console.log('容器宽度:', container.offsetWidth);
+                                if (worldChart) {
+                                    worldChart.resize();
+                                    worldChart.hideLoading();
+                                    console.log('[触发] worldChart.resize() 完成');
+                                }
+                            }, 400); // 建议延迟比 transition 时间多一点
+                        }
+                    });
+
+                    observer.observe(sidebar, {attributes: true, attributeFilter: ['class']});
+
+                } catch (e) {
+                    console.error('地图加载失败', e);
+                    document.getElementById('world-container').innerHTML =
+                        `<p class="text-danger p-3">地图加载失败：${e.message}</p>`;
+                }
+            })();
+        });
+    </script>
+
+{% endblock content %}

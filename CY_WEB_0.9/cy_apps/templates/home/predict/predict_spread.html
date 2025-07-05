@@ -1,0 +1,268 @@
+{% extends "layouts/base.html" %}
+{% block title %}疫情传播模式{% endblock %}
+{% block content %}
+
+<style>
+  .metrics-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin: 50px 0;
+    gap: 30px;
+  }
+
+  .metric-circle {
+    width: 160px;
+    height: 160px;
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .metric-circle:hover {
+    transform: scale(1.15);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+  }
+
+  .metric-circle::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 70%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .metric-circle:hover::before {
+    opacity: 1;
+  }
+
+  .metric-circle .label {
+    font-size: 1.2rem;
+    margin-bottom: 5px;
+  }
+
+  .metric-circle .value {
+    font-size: 2rem;
+    line-height: 1;
+  }
+
+  .metric-circle .unit {
+    font-size: 0.9rem;
+    margin-top: 5px;
+  }
+
+  /* Different sizes for visual interest */
+  .metric-circle.large {
+    width: 180px;
+    height: 180px;
+  }
+
+  .metric-circle.small {
+    width: 140px;
+    height: 140px;
+  }
+
+  /* Original rainbow color scheme */
+  .rainbow1 { background: linear-gradient(135deg, #ff4e50, #f9d423); }
+  .rainbow2 { background: linear-gradient(135deg, #24c6dc, #514a9d); }
+  .rainbow3 { background: linear-gradient(135deg, #43e97b, #38f9d7); }
+  .rainbow4 { background: linear-gradient(135deg, #ff6a00, #ee0979); }
+  .rainbow5 { background: linear-gradient(135deg, #00c9ff, #92fe9d); }
+  .rainbow6 { background: linear-gradient(135deg, #f7971e, #ffd200); }
+  .rainbow7 { background: linear-gradient(135deg, #c471f5, #fa71cd); }
+
+  .data-section {
+<!--    max-width: 900px;-->
+    margin: 0 auto 60px;
+    padding: 25px;
+    background: #bef1ed; /* Yellow background */
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+  }
+
+  .data-cards {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+
+  .data-card {
+    background: transparent;
+    border-radius: 10px;
+    padding: 20px;
+    width: 400px;
+    text-align: center;
+  }
+
+  .data-card .value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin: 10px 0;
+    color: #df0054; /* Blue text */
+  }
+
+  .data-card .label-en {
+    font-size: 2rem;
+    color: #df0054; /* Blue text */
+    font-weight: 600;
+  }
+
+  .data-card .label-cn {
+    font-size: 2rem;
+    color: #df0054; /* Blue text */
+    margin: 5px 0;
+    font-weight: 500;
+  }
+
+  .formula-section {
+<!--    max-width: 1300px;-->
+    margin: 60px auto;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    padding: 25px;
+    background: #FFFFFF;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+  }
+
+  .formula-section h4 {
+    margin: 15px 0 10px;
+    color: #1F2C60;
+    font-size: 1.3rem;
+    font-weight: 600;
+  }
+
+  .formula-section p {
+    margin: 5px 0;
+    color: #d82138;
+    font-size: 1rem;
+    font-weight: 600;
+  }
+</style>
+<!--<div class="py-4">-->
+<!--    <nav aria-label="breadcrumb" class="d-none d-md-inline-block">-->
+<!--        <ol class="breadcrumb breadcrumb-dark breadcrumb-transparent">-->
+<!--            <li class="breadcrumb-item">-->
+<!--                <a href="#">-->
+<!--                    <svg class="icon icon-xxs" fill="none" stroke="currentColor" viewBox="0 0 24 24"-->
+<!--                         xmlns="http://www.w3.org/2000/svg">-->
+<!--                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"-->
+<!--                              d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>-->
+<!--                    </svg>-->
+<!--                </a>-->
+<!--            </li>-->
+
+<!--            <li class="breadcrumb-item"><a href="#">{{ config.PLATFORM_NAME }}</a></li>-->
+<!--            <li class="breadcrumb-item active" aria-current="page">趋势预测分析</li>-->
+<!--            <li class="breadcrumb-item active" aria-current="page">疫情传播模式</li>-->
+<!--        </ol>-->
+<!--    </nav>-->
+
+<!--</div>-->
+<!-- Data Cards Section (moved to top) -->
+<div class="data-section">
+  <div class="data-cards">
+    <div class="data-card">
+      <div class="value">302 125 678</div>
+      <div class="label-en">Confirmed cases</div>
+      <div class="label-cn">累计确诊</div>
+    </div>
+
+    <div class="data-card">
+      <div class="value">6 950 432</div>
+      <div class="label-en">Total Deaths</div>
+      <div class="label-cn">累计死亡</div>
+    </div>
+
+    <div class="data-card">
+      <div class="value">2.3%</div>
+      <div class="label-en">Fatality Rate</div>
+      <div class="label-cn">死亡率</div>
+    </div>
+  </div>
+</div>
+
+<!-- Circle Metrics Section -->
+<div class="metrics-container">
+  <!-- R0 -->
+  <div class="metric-circle rainbow1 large">
+    <span class="label">R₀</span>
+    <span class="value">3.2</span>
+    <span class="unit">基本传染数</span>
+  </div>
+
+  <!-- Rt -->
+  <div class="metric-circle rainbow2 small">
+    <span class="label">Rₜ</span>
+    <span class="value">1.8</span>
+    <span class="unit">实时传染数</span>
+  </div>
+
+  <!-- Latent Period -->
+  <div class="metric-circle rainbow3">
+    <span class="label">潜伏期</span>
+    <span class="value">5.1</span>
+    <span class="unit">天</span>
+  </div>
+
+  <!-- CFR -->
+  <div class="metric-circle rainbow4 small">
+    <span class="label">病死率</span>
+    <span class="value">2.3%</span>
+    <span class="unit">CFR</span>
+  </div>
+
+  <!-- Recovery Rate -->
+  <div class="metric-circle rainbow5 large">
+    <span class="label">恢复率</span>
+    <span class="value">94.7%</span>
+    <span class="unit">Recovery</span>
+  </div>
+
+  <!-- Active Cases -->
+  <div class="metric-circle rainbow6">
+    <span class="label">活跃病例</span>
+    <span class="value">12.8M</span>
+    <span class="unit">Active</span>
+  </div>
+</div>
+
+<!-- Formula Section -->
+<div class="formula-section">
+  <h4>R₀（基本传染数）</h4>
+  <p>公式：R₀ = 1 + r × D，其中 r 为增长速率，D 为传染期（天）</p>
+
+  <h4>Rₜ（实时有效传染数）</h4>
+  <p>根据滑动窗口和感染期分布计算，用于衡量当前传播速度</p>
+
+  <h4>潜伏期</h4>
+  <p>定义：感染到出现症状的时间，基于病例追踪平均估算</p>
+
+  <h4>病死率（CFR）</h4>
+  <p>公式：CFR = (累计死亡人数 / 累计确诊人数) × 100%</p>
+
+  <h4>恢复率</h4>
+  <p>公式：Recovery Rate = (累计治愈人数 / 累计确诊人数) × 100%</p>
+
+  <h4>活跃病例</h4>
+  <p>公式：Active = 总确诊 - 治愈 - 死亡</p>
+
+  <h4>新增病例</h4>
+  <p>当前日累计确诊数 - 前一日累计确诊数</p>
+</div>
+
+
+{% endblock %}

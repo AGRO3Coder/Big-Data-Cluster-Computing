@@ -1,0 +1,62 @@
+{% extends 'layouts/base.html' %}
+
+{% block content %}
+<div class="container mx-auto p-4">
+    <h1 class="text-2xl font-semibold mb-8">集群连接状态</h1>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold mb-4">节点状态（饼图）</h3>
+            <canvas id="nodeStatusChart"></canvas>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold mb-4">存储使用率（折线图）</h3>
+            <canvas id="storageUsageChart"></canvas>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold mb-4">连接日志（时间轴）</h3>
+            <div id="connectionLog" class="space-y-2"></div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const nodeStatus = JSON.parse('{{ node_status|escapejs }}');
+        const storageData = JSON.parse('{{ storage_data|escapejs }}');
+        const connectionLogs = JSON.parse('{{ connection_logs|escapejs }}');
+
+        // 节点状态饼图
+        new Chart(document.getElementById('nodeStatusChart'), {
+            type: 'pie',
+            data: {
+                labels: Object.keys(nodeStatus),
+                datasets: [{ data: Object.values(nodeStatus), backgroundColor: ['#4299e1', '#48bb78', '#e53e3e'] }]
+            }
+        });
+
+        // 存储使用率折线图
+        new Chart(document.getElementById('storageUsageChart'), {
+            type: 'line',
+            data: {
+                labels: storageData.dates,
+                datasets: [{ label: '存储使用率(%)', data: storageData.usage, borderColor: '#4299e1' }]
+            }
+        });
+
+        // 连接日志时间轴
+        const logContainer = document.getElementById('connectionLog');
+        connectionLogs.forEach(log => {
+            logContainer.innerHTML += `
+                <div class="p-2 bg-gray-50 rounded">
+                    <span class="text-sm text-gray-600">[${log.time}]</span>
+                    <span class="ml-2 ${log.status === '成功' ? 'text-green-600' : 'text-red-600'}">${log.message}</span>
+                </div>
+            `;
+        });
+    });
+</script>
+{% endblock %}

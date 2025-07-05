@@ -1,0 +1,335 @@
+{% extends "layouts/base.html" %}
+{% load static %}
+
+{% block content %}
+    <div class="container mx-auto px-6 py-10 font-sans">
+
+    <h2 class="text-3xl font-extrabold mb-8 text-gray-800 tracking-wide relative">
+        <span class="absolute left-0 top-1.5 w-2 h-8 bg-primary rounded-md"></span>
+        <span class="ml-4">目标检测系统</span>
+    </h2>
+
+    <!-- 预设图片选择区 -->
+    <div class="mb-10 p-6 bg-white rounded-xl shadow-md border border-accent">
+        <h3 class="text-xl font-semibold mb-4">选择预设图片</h3>
+        <form method="POST" id="preset-form">
+            {% csrf_token %}
+            <input type="hidden" name="model" value="{{ selected_model }}">
+
+            <div class="flex flex-wrap justify-between gap-y-4">  <!-- 改为flex布局 -->
+                {% for filename in preset_images %}
+                    <button type="submit"
+                            name="preset_image"
+                            value="assets/img/jpg/{{ filename }}"
+                            class="group relative overflow-hidden rounded-lg border-2 border-transparent hover:border-primary transition-all w-[calc(50%-0.5rem)] sm:w-[calc(33.333%-0.666rem)] md:w-[calc(25%-0.75rem)] lg:w-[calc(20%-0.8rem)]">
+                        <img src="{% static 'assets/img/jpg/'|add:filename %}"
+                             class="w-full h-32 object-cover"
+                             alt="检测样本 {{ filename }}">
+                        <div class="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                            <span class="text-white font-medium">使用此图检测</span>
+                        </div>
+                    </button>
+                    {% empty %}
+                    <div class="w-full text-center py-8 text-gray-500">
+                        未找到示例图片
+                    </div>
+                {% endfor %}
+            </div>
+        </form>
+    </div>
+    <!-- 新增：HDFS文件下载模块 -->
+    <div class="mb-10 p-8 bg-white rounded-lg shadow-lg border border-gray-200 hover:shadow-xl transition-shadow duration-300">
+        <h3 class="text-2xl font-bold mb-6 text-gray-800 flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-blue-500" fill="none" viewBox="0 0 24 24"
+                 stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+            </svg>
+            从HDFS选择图片
+        </h3>
+
+        <div class="space-y-6">
+            <div class="form-group">
+                <label class="block text-sm font-medium text-gray-700 mb-1">HDFS 文件路径</label>
+                <div class="relative rounded-md shadow-sm">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none"
+                             viewBox="0 0 24 24" stroke="#003b73">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                        </svg>
+                    </div>
+                    <input type="text"
+                           class="form-input block w-full pl-10 pr-12 py-3 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                           id="hdfsPath" placeholder="/" value="/">
+                </div>
+            </div>
+
+            <button class="download-btn w-full flex justify-center items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-secondary hover:bg-primary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-300"
+                    onclick="downloadFile()">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24"
+                     stroke="white">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                </svg>
+                确认
+            </button>
+
+            <div class="result p-4 bg-gray-50 rounded-lg min-h-12" id="result"></div>
+        </div>
+
+    </div>
+    <!-- 上传模型 -->
+    {% if user.is_superuser or user.is_staff %}
+        <form method="POST" enctype="multipart/form-data"
+              class="bg-light p-6 rounded-xl shadow-md border border-accent mb-10 transition-all duration-300 hover:shadow-lg">
+            {% csrf_token %}
+            <label class="block mb-2 font-semibold text-gray-700">上传新模型（仅支持 .pt）：</label>
+            <div class="flex flex-col sm:flex-row items-center gap-4">
+                <input type="file" name="model_file" accept=".pt"
+                       class="flex-1 text-sm text-gray-700 border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-secondary transition">
+                <button type="submit"
+                        class="bg-primary hover:bg-secondary text-white font-semibold py-2.5 px-6 rounded-md transition-all duration-300 shadow-md">
+                    上传模型
+                </button>
+            </div>
+            {% if error %}
+                <p class="text-red-500 mt-2 text-sm">{{ error }}</p>
+            {% endif %}
+        </form>
+    {% endif %}
+    <!-- 检测表单 -->
+    <form method="POST" enctype="multipart/form-data"
+          class="bg-white shadow-xl p-8 rounded-xl transition-all duration-300 hover:shadow-2xl">
+        {% csrf_token %}
+
+        <!-- 模型选择 -->
+        <div class="mb-6">
+            <label class="block mb-2 font-semibold text-gray-700">选择模型：</label>
+            <div class="relative w-full max-w-xs">
+                <select name="model" required
+                        class="w-full bg-primary text-white font-semibold py-2 px-3 pr-8 rounded-md shadow focus:outline-none focus:ring-2 focus:ring-secondary transition appearance-none">
+                    {% for model_file in model_files %}
+                        <option value="{{ model_file }}"
+                                {% if selected_model == model_file %}selected{% endif %}>{{ model_file }}</option>
+                    {% endfor %}
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-white">
+                    <svg class="fill-current h-4 w-4" viewBox="0 0 20 20">
+                        <path d="M5.5 7l4.5 4 4.5-4z"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- 图片上传 -->
+        <div class="mb-6">
+            <label class="block mb-2 font-semibold text-gray-700">上传图片：</label>
+            <input type="file" name="image"
+                   class="block w-full border border-gray-300 rounded-md py-2 px-3 shadow-sm focus:ring-primary focus:border-primary transition">
+        </div>
+
+        <button type="submit"
+                class="bg-primary hover:bg-secondary text-white font-semibold py-2.5 px-8 rounded-lg transition-all duration-300 shadow-md transform hover:-translate-y-0.5 focus:outline-none">
+            开始检测
+        </button>
+    </form>
+
+    {% if image_data %}
+        <div class="mt-12 p-6 bg-white rounded-xl shadow-xl border border-accent">
+        <!-- 第一行：图像和折线图纵向排列 -->
+        <div class="flex flex-col md:flex-row gap-8 mb-8">
+            <!-- 检测结果图 -->
+            <div class="w-full md:w-1/2">
+                <h3 class="text-2xl font-bold text-gray-800 mb-4">检测图像结果</h3>
+                <img src="data:image/jpeg;base64,{{ image_data }}"
+                     class="w-full rounded-xl shadow-lg border object-contain max-h-[600px]"
+                     alt="检测图像"/>
+            </div>
+
+            <!-- 折线图区域 -->
+            <div class="w-full md:w-1/2">
+                <h3 class="text-2xl font-bold text-gray-800 mb-4">置信度折线图</h3>
+                <canvas id="confidenceChart" class="w-full h-[600px] rounded-xl border"></canvas>
+            </div>
+        </div>
+
+        <!-- 第二行：表格和图例并排 -->
+        <div class="flex flex-col md:flex-row gap-8">
+
+            <!-- 图例 -->
+            <div class="w-full md:w-1/2 bg-white rounded-xl shadow-lg border border-accent p-4 flex flex-col h-full">
+                <h3 class="text-xl font-semibold mb-4 text-gray-700 border-b pb-2">类别图例说明</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 flex-grow content-between">
+                    <div class="p-4 bg-red-50 rounded-lg shadow-sm border border-red-100">
+                        <h4 class="font-semibold text-red-700">Pandas</h4>
+                        <p class="text-sm text-gray-600">熊猫</p>
+                    </div>
+                    <div class="p-4 bg-red-50 rounded-lg shadow-sm border border-red-100">
+                        <h4 class="font-semibold text-red-700">RedPandas</h4>
+                        <p class="text-sm text-gray-600">小熊猫</p>
+                    </div>
+                    <div class="p-4 bg-red-50 rounded-lg shadow-sm border border-red-100">
+                        <h4 class="font-semibold text-red-700">Macaque</h4>
+                        <p class="text-sm text-gray-600">猕猴</p>
+                    </div>
+                    <div class="p-4 bg-red-50 rounded-lg shadow-sm border border-red-100">
+                        <h4 class="font-semibold text-red-700">River</h4>
+                        <p class="text-sm text-gray-600">河流</p>
+                    </div>
+                    <div class="p-4 bg-red-50 rounded-lg shadow-sm border border-red-100">
+                        <h4 class="font-semibold text-red-700">Stone</h4>
+                        <p class="text-sm text-gray-600">石头</p>
+                    </div>
+                    <div class="p-4 bg-red-50 rounded-lg shadow-sm border border-red-100">
+                        <h4 class="font-semibold text-red-700">Tree</h4>
+                        <p class="text-sm text-gray-600">树木</p>
+                    </div>
+                    <div class="p-4 bg-red-50 rounded-lg shadow-sm border border-red-100">
+                        <h4 class="font-semibold text-red-700">Grass</h4>
+                        <p class="text-sm text-gray-600">草地</p>
+                    </div>
+                    <div class="p-4 bg-red-50 rounded-lg shadow-sm border border-red-100">
+                        <h4 class="font-semibold text-red-700">Snow</h4>
+                        <p class="text-sm text-gray-600">雪地</p>
+                    </div>
+                </div>
+            </div>
+            <!-- 表格 -->
+            <div class="w-full md:w-1/2 overflow-x-auto rounded-xl border border-accent p-4 animate-fade-in">
+                <h3 class="text-xl font-semibold text-gray-800 mb-2">检测结果详情表</h3>
+                <table class="min-w-full text-sm text-left">
+                    <thead class="bg-primary text-white uppercase text-xs tracking-wider">
+                    <tr>
+                        <th class="px-6 py-3">类别</th>
+                        <th class="px-6 py-3">置信度</th>
+                        <th class="px-6 py-3">位置</th>
+                    </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                    {% for row in results_table %}
+                        <tr class="hover:bg-light transition">
+                            <td class="px-6 py-4 font-medium text-gray-800">{{ row.class }}</td>
+                            <td class="px-6 py-4 text-gray-600">{{ row.conf }}</td>
+                            <td class="px-6 py-4 text-gray-600">
+                                [{{ row.position.0 }}, {{ row.position.1 }}, {{ row.position.2 }}, {{ row.position.3 }}]
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+    <style>
+        .bg-primary {
+            background-color: #003b73;
+        }
+
+        .bg-secondary {
+            background-color: #0b4b87;
+        }
+
+        .bg-accent {
+            background-color: #002a52;
+        }
+
+        .bg-light {
+            background-color: #c2e0ff;
+        }
+
+        .bg-neutral {
+            background-color: #f4f4f4;
+        }
+
+        .text-primary {
+            color: #003b73;
+        }
+
+        .border-accent {
+            border-color: #002a52;
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.6s ease-in-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        function downloadFile() {
+            const hdfsPath = document.getElementById('hdfsPath').value;
+            const resultDiv = document.getElementById('result');
+            resultDiv.style.display = 'none';
+
+            // 这里根据实际后端接口调整，示例用 fetch 发起请求
+            fetch(`/download-hdfs/?hdfs_path=${encodeURIComponent(hdfsPath)}`)
+                .then((res) => res.json())
+                .then((data) => {
+                    resultDiv.className = `result ${data.status}`;
+                    resultDiv.innerText = data.msg;
+                    resultDiv.style.display = 'block';
+                    // 关键修改：下载成功后刷新整个页面
+                    if (data.status === 'success') {
+                        setTimeout(() => {
+                            window.location.reload(); // 刷新整个页面
+                        }, 1000); // 延迟1秒执行，让用户看到成功提示
+                    }
+                })
+                .catch((err) => {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerText = '请求失败，请稍后重试';
+                    resultDiv.style.display = 'block';
+                });
+        }
+
+        console.log('results_table 是否存在:', {% if results_table %}true{% else %}false{% endif %});
+        {% if results_table %}
+            const labels = [
+                {% for row in results_table|dictsortreversed:"conf" %}'{{ row.class }}',{% endfor %}
+            ];
+            const confidences = [
+                {% for row in results_table|dictsortreversed:"conf" %}{{ row.conf }}, {% endfor %}
+            ];
+            const ctx = document.getElementById('confidenceChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Confidence',
+                        data: confidences,
+                        borderColor: '#003b73',
+                        backgroundColor: '#c2e0ff88',
+                        fill: true,
+                        tension: 0.3,
+                        pointRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 1.0
+                        }
+                    }
+                }
+            });
+        {% endif %}
+    </script>
+{% endblock %}

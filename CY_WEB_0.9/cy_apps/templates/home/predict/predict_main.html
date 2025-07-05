@@ -1,0 +1,1212 @@
+{% extends "layouts/base.html" %}
+{% block title %}疫情预测分析{% endblock %}
+{% block content %}
+    <style>
+        :root {
+            --primary-color: #4e73df;
+            --secondary-color: #1cc88a;
+            --warning-color: #f6c23e;
+            --danger-color: #e74a3b;
+            --light-color: #f8f9fc;
+            --dark-color: #5a5c69;
+            --shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+        }
+
+        .prediction-container {
+        {#font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;#} color: #333;
+            background-color: #f8f9fc;
+            padding: 20px;
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e3e6f0;
+        }
+
+        .header-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #FF4B68;
+        }
+
+        .header-title i {
+            margin-right: 10px;
+            color: var(--primary-color);
+        }
+
+        .view-switcher {
+            display: flex;
+            gap: 10px;
+        }
+
+        .view-btn {
+            padding: 8px 20px;
+            border-radius: 5px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .view-btn.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .view-btn:not(.active) {
+            background-color: white;
+            color: var(--dark-color);
+            border: 1px solid #d1d3e2;
+        }
+
+        .view-btn:not(.active):hover {
+            background-color: #f8f9fa;
+        }
+
+        .card {
+            background-color: white;
+            border-radius: 0.35rem;
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+            border: none;
+        }
+
+        .card-header {
+            padding: 1rem 1.35rem;
+            background-color: #f8f9fc;
+            border-bottom: 1px solid #e3e6f0;
+            font-weight: 700;
+            color: #D82138;
+            border-radius: 0.35rem 0.35rem 0 0 !important;
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 30rem;
+            width: 100%;
+        }
+
+        .stats-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            flex: 1;
+            min-width: 200px;
+            background: white;
+            border-radius: 0.35rem;
+            padding: 20px;
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stat-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin: 10px 0;
+        }
+
+        .stat-title {
+            color: var(--dark-color);
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .stat-change {
+            display: flex;
+            align-items: center;
+            font-size: 0.9rem;
+        }
+
+        .up {
+            color: var(--danger-color);
+        }
+
+        .down {
+            color: var(--secondary-color);
+        }
+
+        .prediction-section {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .prediction-chart {
+            flex: 2;
+            min-width: 300px;
+        }
+
+        .prediction-summary {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .summary-item {
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e3e6f0;
+        }
+
+        .summary-item:last-child {
+            border-bottom: none;
+        }
+
+        .summary-title {
+            font-weight: 600;
+            color: var(--dark-color);
+            margin-bottom: 5px;
+        }
+
+        .summary-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .date-picker {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .date-input {
+            padding: 8px 12px;
+            border: 1px solid #d1d3e2;
+            border-radius: 4px;
+        }
+
+        .predict-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        /* 添加标题和日期的分组容器 */
+        .header-title-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 调整日期显示样式 */
+        #current-date {
+            font-size: 1.2rem;
+            color: #6e707e;
+            margin-top: 4px;
+            background: #f8f9fc;
+            padding: 2px 6px 2px 0; /* 上 2 右 6 下 2 左 0 */
+            border-radius: 12px;
+        }
+
+
+        @media (max-width: 768px) {
+            .dashboard-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+
+            .view-switcher {
+                width: 100%;
+            }
+
+            .view-btn {
+                font-family: inherit;
+                flex: 1;
+            }
+
+            .prediction-section {
+                flex-direction: column;
+            }
+
+            .header-title-group {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+
+            #current-date {
+                align-self: flex-end;
+                margin-top: 5px;
+            }
+        }
+
+        .skeleton {
+            display: inline-block;
+            width: 6rem; /* 你可以根据实际内容宽度调整 */
+            height: 1.5rem;
+            border-radius: 4px;
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 37%, #f0f0f0 63%);
+            background-size: 400% 100%;
+            animation: skeleton-loading 1.2s ease-in-out infinite;
+        }
+
+        @keyframes skeleton-loading {
+            0% {
+                background-position: 100% 0;
+            }
+            100% {
+                background-position: -100% 0;
+            }
+        }
+
+        .date-picker select,
+        .date-picker input[type="date"] {
+            appearance: none; /* 移除原始样式（对 select 有用） */
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            border: 1px solid #d1d3e2;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            transition: border-color 0.2s;
+        }
+
+        .date-picker select:focus,
+        .date-picker input[type="date"]:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(78, 115, 223, 0.2); /* 与 --primary-color 匹配 */
+        }
+    </style>
+{##}
+{#    <div class="py-4">#}
+{#        <nav aria-label="breadcrumb" class="d-none d-md-inline-block">#}
+{#            <ol class="breadcrumb breadcrumb-dark breadcrumb-transparent">#}
+{#                <li class="breadcrumb-item">#}
+{#                    <a href="#">#}
+{#                        <svg class="icon icon-xxs" fill="none" stroke="currentColor" viewBox="0 0 24 24"#}
+{#                             xmlns="http://www.w3.org/2000/svg">#}
+{#                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"#}
+{#                                  d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>#}
+{#                        </svg>#}
+{#                    </a>#}
+{#                </li>#}
+{##}
+{#                <li class="breadcrumb-item"><a href="#">{{ config.PLATFORM_NAME }}</a></li>#}
+{#                <li class="breadcrumb-item active" aria-current="page">趋势预测分析</li>#}
+{#                <li class="breadcrumb-item active" aria-current="page">疫情预测分析模块</li>#}
+{#            </ol>#}
+{#        </nav>#}
+{##}
+{#    </div>#}
+    <div class="row">
+        <div class="col-12 col-lg-6">
+            <div class="card border-0 shadow">
+                <div class="">
+                    <div class="card-body">
+                        <div class="prediction-container">
+                            <div class="dashboard-header">
+                                <div class="header-title-group">
+                                    <h1 class="header-title">
+                                        <i class="fas fa-chart-line"></i> 疫情预测分析模块
+                                    </h1>
+                                    <span id="current-date" class="text-sm text-gray-500"></span>
+                                </div>
+                                <div class="view-switcher">
+                                    <button class="view-btn active" id="global-btn">全球疫情</button>
+                                    <button class="view-btn" id="domestic-btn">国内疫情</button>
+                                </div>
+                            </div>
+
+                            <div class="stats-container">
+                                <div class="stat-card">
+                                    <span class="stat-title">累计确诊</span>
+                                    <span class="stat-value skeleton" id="total-cases"></span>
+                                    <div class="stat-change">
+                                        <span>较昨日 <span class="skeleton" id="cases-change"></span></span>
+                                    </div>
+                                </div>
+                                <div class="stat-card">
+                                    <span class="stat-title">累计死亡</span>
+                                    <span class="stat-value skeleton" id="total-deaths"></span>
+                                    <div class="stat-change">
+                                        <span>较昨日 <span class="skeleton" id="deaths-change"></span></span>
+                                    </div>
+                                </div>
+                                <div class="stat-card">
+                                    <span class="stat-title">累计治愈</span>
+                                    <span class="stat-value skeleton" id="total-recovered"></span>
+                                    <div class="stat-change">
+                                        <span>较昨日 <span class="skeleton" id="recovered-change"></span></span>
+                                    </div>
+                                </div>
+                                <div class="stat-card">
+                                    <span class="stat-title">现有确诊</span>
+                                    <span class="stat-value skeleton" id="active-cases"></span>
+                                    <div class="stat-change">
+                                        <span>较昨日 <span class="skeleton" id="active-change"></span></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card">
+                                <div class="card-header">
+                                    疫情趋势分析与预测
+                                </div>
+                                <div class="card-body">
+                                    <div id="loading-spinner" style="
+    position: relative;
+    height: 30rem;
+">
+                                        <div style="
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+    ">
+                                            <i class="fas fa-spinner fa-spin"
+                                               style="font-size: 24px; color: var(--primary-color);"></i>
+                                            <p style="margin-top: 10px; color: var(--dark-color); font-weight: 500;">
+                                                模型预测,
+                                                数据加载中...</p>
+                                        </div>
+                                    </div>
+
+                                    <div id="prediction-content" style="display: none;">
+                                        <div class="prediction-section">
+                                            <div class="prediction-chart">
+                                                <div class="chart-container">
+                                                    <canvas id="trend-chart"></canvas>
+                                                </div>
+                                            </div>
+                                            <div class="prediction-summary">
+                                                <h4 id="prediction-title">未来7天预测</h4>
+
+                                                <div class="summary-item">
+                                                    <div class="summary-title">预测确诊总数</div>
+                                                    <div class="summary-value" id="predicted-cases">13,245,678</div>
+                                                    <div>预计增长: <span id="predicted-cases-growth">+2.5%</span></div>
+                                                </div>
+
+                                                <div class="summary-item">
+                                                    <div class="summary-title">预测死亡总数</div>
+                                                    <div class="summary-value" id="predicted-deaths">258,456</div>
+                                                    <div>预计增长: <span id="predicted-deaths-growth">+1.8%</span></div>
+                                                </div>
+
+                                                <div class="summary-item">
+                                                    <div class="summary-title">预测治愈总数</div>
+                                                    <div class="summary-value" id="predicted-recovered">8,745,321</div>
+                                                    <div>预计增长: <span id="predicted-recovered-growth">+3.2%</span>
+                                                    </div>
+                                                </div>
+
+                                                <div class="summary-item">
+                                                    <div class="summary-title">MAPE 指标（与真实值的误差（百分比））</div>
+                                                    <div class="summary-value" id="prediction-accuracy">92.5%</div>
+                                                    <div id="prediction-accuracy-note">基于历史数据评估</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="date-picker">
+                                            <span>预测起始日期:</span>
+                                            <input type="date" class="date-input" id="predict-start-date">
+
+                                            <span>预测周期:</span>
+                                            <select id="predict-range">
+                                                <option value="7">7 天</option>
+                                                <option value="14">14 天</option>
+                                                <option value="30">30 天</option>
+                                            </select>
+
+                                            <span id="area-label">国家:</span>
+                                            <select id="area-select" style="width: 5rem;">
+                                                <!-- 选项动态生成 -->
+                                            </select>
+
+                                            <span id="city-label" style="display: none">地区:</span>
+                                            <select id="city-select" style="display: none;width: 7.5rem;">
+                                                <!-- 仅省份选中时显示 -->
+                                            </select>
+
+                                            <button class="predict-btn" id="predict-btn">预测</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet"/>
+
+    <!-- jQuery（Select2 依赖）-->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+
+    <!-- Select2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment"></script>
+    <script>
+        function applySignClasses() {
+            document
+                .querySelectorAll('span[id$="-change"], span[id$="-growth"]')
+                .forEach(el => {
+                    const isNegative = el.textContent.trim().startsWith('-');
+                    el.classList.toggle('down', isNegative);
+                    el.classList.toggle('up', !isNegative);
+                });
+        }
+
+        function showLoading() {
+            document.getElementById('loading-spinner').style.display = 'block';
+            document.getElementById('prediction-content').style.display = 'none';
+        }
+
+        function hideLoading() {
+            document.getElementById('loading-spinner').style.display = 'none';
+            document.getElementById('prediction-content').style.display = 'block';
+        }
+
+        function reinitSelect2($el, options) {
+            if ($el.hasClass("select2-hidden-accessible")) {
+                $el.select2('destroy');
+            }
+            $el.select2(Object.assign({
+                placeholder: "请选择地区",
+                dropdownAutoWidth: true,
+                width: 'resolve',
+                minimumResultsForSearch: 0
+            }, options));
+        }
+
+        function toggleCitySelect(show) {
+            const citySelect = document.getElementById('city-select');
+            const cityLabel = document.getElementById('city-label');
+            const $citySelect = $('#city-select');
+
+            citySelect.style.display = show ? 'inline-block' : 'none';
+            cityLabel.style.display = show ? 'inline-block' : 'none';
+            $citySelect.next('.select2-container').toggle(show);
+        }
+
+        $('#area-select, #city-select, #predict-range').select2({
+            minimumResultsForSearch: Infinity, // 关闭搜索框（预测周期没必要搜索）
+            dropdownAutoWidth: true,
+            width: 'resolve'
+        });
+        $(document).ready(function () {
+            $('#area-select, #city-select').select2({
+                placeholder: "请选择",
+                minimumResultsForSearch: 0,  // 始终启用搜索
+                dropdownAutoWidth: true,
+                width: 'resolve'
+            });
+
+            // 限制最大显示高度（防止太长）
+            $(document).on('select2:open', () => {
+                $('.select2-results__options').css({
+                    'max-height': '5rem',
+                    'overflow-y': 'auto'
+                });
+            });
+        });
+
+
+        document.addEventListener('DOMContentLoaded', function () {
+            let isFirstLoad = true; // 只在第一次加载数据时移除骨架
+
+            function removeSkeletonOnce() {
+                if (isFirstLoad) {
+                    [
+                        'total-cases', 'total-deaths', 'total-recovered', 'active-cases',
+                        'cases-change', 'deaths-change', 'recovered-change', 'active-change'
+                    ].forEach(id => document.getElementById(id).classList.remove('skeleton'));
+
+                    isFirstLoad = false; // 标记已执行
+                }
+            }
+
+            function updateconf_date(rawDate) {
+                if (!rawDate) return;                  // 安全判空
+                document.getElementById('predict-start-date').value = rawDate.replace(/\//g, '-');
+            }
+
+            function updateSummary(d) {
+                document.getElementById('total-cases').textContent = d.total_confirmed;
+                document.getElementById('total-deaths').textContent = d.total_deaths;
+                document.getElementById('total-recovered').textContent = d.total_recovered;
+                document.getElementById('active-cases').textContent = d.active_cases;
+                document.getElementById('current-date').textContent = "Date：" + d.date;
+                document.getElementById('cases-change').textContent = d.change_confirmed;
+                document.getElementById('deaths-change').textContent = d.change_deaths;
+                document.getElementById('recovered-change').textContent = d.change_recovered;
+                document.getElementById('active-change').textContent = d.change_active;
+                removeSkeletonOnce();
+                applySignClasses();
+            }
+
+            function loadSummary(scope) {
+                fetch(`/predict_summary`)
+                    .then(r => r.json())
+                    .then(data => {
+                        const key = scope === 'china' ? 'china_data' : 'global_data';
+                        updateSummary(data[key]);
+                    })
+                    .catch(console.error);
+            }
+
+            document.getElementById('predict-btn').addEventListener('click', function () {
+                showLoading();                   // ⬅️ 这行往前提
+                const startDate = document.getElementById('predict-start-date').value;
+                const forecastDays = parseInt(document.getElementById('predict-range').value);
+                const isDomestic = document.getElementById('domestic-btn').classList.contains('active');
+
+                const area = document.getElementById('area-select').value;
+                const city = isDomestic ? document.getElementById('city-select').value : null;
+
+                if (!startDate) {
+                    alert('请选择预测起始日期');
+                    return;
+                }
+
+                const payload = {
+                    start_date: startDate,
+                    forecast_days: forecastDays,
+                    scope: isDomestic ? 'china' : 'world',
+                    area: area,
+                    city: city
+                };
+
+                fetch('/predict_result', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log("后端返回：", data);
+                        alert("预测结果已收到，查看控制台了解详细内容。");
+                        loadData(data)
+                        // 你可以继续处理数据绘图或页面展示
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        alert('预测请求失败，请检查控制台。');
+                        hideLoading();               // 出错也要关掉 spinner
+                    });
+            });
+            const isDomesticView = () => document.getElementById('domestic-btn').classList.contains('active');
+
+            const areaSelect = document.getElementById('area-select');
+            const citySelect = document.getElementById('city-select');
+            const areaLabel = document.getElementById('area-label');
+
+            const countryList = [
+                // ====== 亚洲（47个）====== //
+                {value: 'Global', name: '全球'},
+                {value: 'Afghanistan', name: '阿富汗'},
+                {value: 'China', name: '中国'},
+                {value: 'India', name: '印度'},
+                {value: 'Japan', name: '日本'},
+                {value: 'South Korea', name: '韩国'},
+                {value: 'Indonesia', name: '印度尼西亚'},
+                {value: 'Saudi Arabia', name: '沙特阿拉伯'},
+                {value: 'Iran', name: '伊朗'},
+                {value: 'Thailand', name: '泰国'},
+                {value: 'Vietnam', name: '越南'},
+                {value: 'Malaysia', name: '马来西亚'},
+                {value: 'Philippines', name: '菲律宾'},
+                {value: 'Singapore', name: '新加坡'},
+                {value: 'Israel', name: '以色列'},
+                {value: 'Turkey', name: '土耳其'},
+                {value: 'United Arab Emirates', name: '阿联酋'},
+                {value: 'Iraq', name: '伊拉克'},
+                {value: 'Pakistan', name: '巴基斯坦'},
+                {value: 'Bangladesh', name: '孟加拉国'},
+                {value: 'Kazakhstan', name: '哈萨克斯坦'},
+                {value: 'Sri Lanka', name: '斯里兰卡'},
+                {value: 'Nepal', name: '尼泊尔'},
+                {value: 'Lebanon', name: '黎巴嫩'},
+                {value: 'Jordan', name: '约旦'},
+                {value: 'Syria', name: '叙利亚'},
+                {value: 'Yemen', name: '也门'},
+                {value: 'Oman', name: '阿曼'},
+                {value: 'Kuwait', name: '科威特'},
+                {value: 'Qatar', name: '卡塔尔'},
+                {value: 'Georgia', name: '格鲁吉亚'},
+                {value: 'Armenia', name: '亚美尼亚'},
+                {value: 'Azerbaijan', name: '阿塞拜疆'},
+                {value: 'Bhutan', name: '不丹'},
+                {value: 'Maldives', name: '马尔代夫'},
+                {value: 'Brunei', name: '文莱'},
+                {value: 'Mongolia', name: '蒙古'},
+                {value: 'Cyprus', name: '塞浦路斯'},
+                {value: 'Tajikistan', name: '塔吉克斯坦'},
+                {value: 'Turkmenistan', name: '土库曼斯坦'},
+                {value: 'Uzbekistan', name: '乌兹别克斯坦'},
+                {value: 'Kyrgyzstan', name: '吉尔吉斯斯坦'},
+                {value: 'Laos', name: '老挝'},
+                {value: 'Cambodia', name: '柬埔寨'},
+                {value: 'Timor-Leste', name: '东帝汶'},
+                {value: 'Palestine', name: '巴勒斯坦'},
+                {value: 'Taiwan, China', name: '中国台湾省'},  // 网页[3]特殊处理
+                {value: 'Hong Kong, China', name: '中国香港'},
+                {value: 'Macau, China', name: '中国澳门'},
+
+                // ====== 欧洲（44个）====== //
+                {value: 'Germany', name: '德国'},
+                {value: 'France', name: '法国'},
+                {value: 'United Kingdom', name: '英国'},
+                {value: 'Italy', name: '意大利'},
+                {value: 'Spain', name: '西班牙'},
+                {value: 'Sweden', name: '瑞典'},
+                {value: 'Switzerland', name: '瑞士'},
+                {value: 'Netherlands', name: '荷兰'},
+                {value: 'Belgium', name: '比利时'},
+                {value: 'Greece', name: '希腊'},
+                {value: 'Portugal', name: '葡萄牙'},
+                {value: 'Russia', name: '俄罗斯'},
+                {value: 'Ukraine', name: '乌克兰'},
+                {value: 'Poland', name: '波兰'},
+                {value: 'Austria', name: '奥地利'},
+                {value: 'Romania', name: '罗马尼亚'},
+                {value: 'Czechia', name: '捷克'},
+                {value: 'Hungary', name: '匈牙利'},
+                {value: 'Serbia', name: '塞尔维亚'},
+                {value: 'Croatia', name: '克罗地亚'},
+                {value: 'Bulgaria', name: '保加利亚'},
+                {value: 'Belarus', name: '白俄罗斯'},
+                {value: 'Slovakia', name: '斯洛伐克'},
+                {value: 'Norway', name: '挪威'},
+                {value: 'Finland', name: '芬兰'},
+                {value: 'Denmark', name: '丹麦'},
+                {value: 'Ireland', name: '爱尔兰'},
+                {value: 'Lithuania', name: '立陶宛'},
+                {value: 'Latvia', name: '拉脱维亚'},
+                {value: 'Estonia', name: '爱沙尼亚'},
+                {value: 'Slovenia', name: '斯洛文尼亚'},
+                {value: 'North Macedonia', name: '北马其顿'},
+                {value: 'Albania', name: '阿尔巴尼亚'},
+                {value: 'Bosnia and Herzegovina', name: '波黑'},
+                {value: 'Montenegro', name: '黑山'},
+                {value: 'Luxembourg', name: '卢森堡'},
+                {value: 'Malta', name: '马耳他'},
+                {value: 'Iceland', name: '冰岛'},
+                {value: 'Moldova', name: '摩尔多瓦'},
+                {value: 'Liechtenstein', name: '列支敦士登'},
+                {value: 'Monaco', name: '摩纳哥'},
+                {value: 'San Marino', name: '圣马力诺'},
+                {value: 'Andorra', name: '安道尔'},
+                {value: 'Kosovo', name: '科索沃'},
+                {value: 'US', name: '美国'},
+                {value: 'Canada', name: '加拿大'},
+                {value: 'Brazil', name: '巴西'},
+                {value: 'Mexico', name: '墨西哥'},
+                {value: 'Argentina', name: '阿根廷'},
+                {value: 'Chile', name: '智利'},
+                {value: 'Colombia', name: '哥伦比亚'},
+                {value: 'Peru', name: '秘鲁'},
+                {value: 'Venezuela', name: '委内瑞拉'},
+                {value: 'Ecuador', name: '厄瓜多尔'},
+                {value: 'Guatemala', name: '危地马拉'},
+                {value: 'Cuba', name: '古巴'},
+                {value: 'Dominican Republic', name: '多米尼加'},
+                {value: 'Honduras', name: '洪都拉斯'},
+                {value: 'Bolivia', name: '玻利维亚'},
+                {value: 'El Salvador', name: '萨尔瓦多'},
+                {value: 'Paraguay', name: '巴拉圭'},
+                {value: 'Costa Rica', name: '哥斯达黎加'},
+                {value: 'Panama', name: '巴拿马'},
+                {value: 'Uruguay', name: '乌拉圭'},
+                {value: 'Jamaica', name: '牙买加'},
+                {value: 'Trinidad and Tobago', name: '特立尼达和多巴哥'},
+                {value: 'Guyana', name: '圭亚那'},
+                {value: 'Suriname', name: '苏里南'},
+                {value: 'Bahamas', name: '巴哈马'},
+                {value: 'Barbados', name: '巴巴多斯'},
+                {value: 'Saint Lucia', name: '圣卢西亚'},
+                {value: 'Grenada', name: '格林纳达'},
+                {value: 'Antigua and Barbuda', name: '安提瓜和巴布达'},
+                {value: 'Belize', name: '伯利兹'},
+                {value: 'Saint Vincent and the Grenadines', name: '圣文森特和格林纳丁斯'},
+                {value: 'Dominica', name: '多米尼克'},
+                {value: 'Saint Kitts and Nevis', name: '圣基茨和尼维斯'},
+                {value: 'Haiti', name: '海地'},
+                {value: 'Nicaragua', name: '尼加拉瓜'},
+
+                // ====== 非洲（54个）====== //
+                {value: 'Nigeria', name: '尼日利亚'},
+                {value: 'South Africa', name: '南非'},
+                {value: 'Egypt', name: '埃及'},
+                {value: 'Algeria', name: '阿尔及利亚'},
+                {value: 'Ethiopia', name: '埃塞俄比亚'},
+                {value: 'Kenya', name: '肯尼亚'},
+                {value: 'Tanzania', name: '坦桑尼亚'},
+                {value: 'Ghana', name: '加纳'},
+                {value: 'Angola', name: '安哥拉'},
+                {value: 'Morocco', name: '摩洛哥'},
+                {value: 'Uganda', name: '乌干达'},
+                {value: 'Sudan', name: '苏丹'},
+                {value: 'Mozambique', name: '莫桑比克'},
+                {value: 'Côte d\'Ivoire', name: '科特迪瓦'},  // 网页[4]特殊字符处理
+                {value: 'Madagascar', name: '马达加斯加'},
+                {value: 'Cameroon', name: '喀麦隆'},
+                {value: 'Zambia', name: '赞比亚'},
+                {value: 'Zimbabwe', name: '津巴布韦'},
+                {value: 'Senegal', name: '塞内加尔'},
+                {value: 'Tunisia', name: '突尼斯'},
+                {value: 'Chad', name: '乍得'},
+                {value: 'Somalia', name: '索马里'},
+                {value: 'Guinea', name: '几内亚'},
+                {value: 'Rwanda', name: '卢旺达'},
+                {value: 'Benin', name: '贝宁'},
+                {value: 'Burundi', name: '布隆迪'},
+                {value: 'Mali', name: '马里'},
+                {value: 'Libya', name: '利比亚'},
+                {value: 'Mauritania', name: '毛里塔尼亚'},
+                {value: 'Niger', name: '尼日尔'},
+                {value: 'Burkina Faso', name: '布基纳法索'},
+                {value: 'Malawi', name: '马拉维'},
+                {value: 'Togo', name: '多哥'},
+                {value: 'Eritrea', name: '厄立特里亚'},
+                {value: 'Sierra Leone', name: '塞拉利昂'},
+                {value: 'Central African Republic', name: '中非'},
+                {value: 'Liberia', name: '利比里亚'},
+                {value: 'Congo (Brazzaville)', name: '刚果(布)'},
+                {value: 'Congo (Kinshasa)', name: '刚果(金)'},
+                {value: 'Gabon', name: '加蓬'},
+                {value: 'Botswana', name: '博茨瓦纳'},
+                {value: 'Namibia', name: '纳米比亚'},
+                {value: 'Lesotho', name: '莱索托'},
+                {value: 'Equatorial Guinea', name: '赤道几内亚'},
+                {value: 'Mauritius', name: '毛里求斯'},
+                {value: 'Eswatini', name: '斯威士兰'},
+                {value: 'Djibouti', name: '吉布提'},
+                {value: 'Comoros', name: '科摩罗'},
+                {value: 'Cabo Verde', name: '佛得角'},
+                {value: 'Sao Tome and Principe', name: '圣多美和普林西比'},
+                {value: 'Seychelles', name: '塞舌尔'},
+                {value: 'Gambia', name: '冈比亚'},
+                {value: 'Guinea-Bissau', name: '几内亚比绍'},
+                {value: 'South Sudan', name: '南苏丹'},
+
+                // ====== 大洋洲（14个）====== //
+                {value: 'Australia', name: '澳大利亚'},
+                {value: 'New Zealand', name: '新西兰'},
+                {value: 'Papua New Guinea', name: '巴布亚新几内亚'},
+                {value: 'Fiji', name: '斐济'},
+                {value: 'Solomon Islands', name: '所罗门群岛'},
+                {value: 'Vanuatu', name: '瓦努阿图'},
+                {value: 'Samoa', name: '萨摩亚'},
+                {value: 'Tonga', name: '汤加'},
+                {value: 'Kiribati', name: '基里巴斯'},
+                {value: 'Micronesia', name: '密克罗尼西亚'},
+                {value: 'Marshall Islands', name: '马绍尔群岛'},
+                {value: 'Palau', name: '帕劳'},
+                {value: 'Tuvalu', name: '图瓦卢'},
+                {value: 'Nauru', name: '瑙鲁'},
+
+                // ====== 特殊实体（23个）====== //
+                {value: 'Diamond Princess', name: '钻石公主号邮轮'},  // 网页[5]
+                {value: 'MS Zaandam', name: '赞丹号邮轮'},
+                {value: 'Summer Olympics 2020', name: '2020夏季奥运会'},
+                {value: 'Winter Olympics 2022', name: '2022冬季奥运会'},
+                {value: 'Holy See', name: '梵蒂冈'},
+                {value: 'Western Sahara', name: '西撒哈拉'},  // 网页[5]
+                {value: 'French Southern Territories', name: '法属南部领地'},
+                {value: 'Bermuda', name: '百慕大(英)'},
+                {value: 'Cayman Islands', name: '开曼群岛(英)'},
+                {value: 'Greenland', name: '格陵兰(丹)'},
+                {value: 'Puerto Rico', name: '波多黎各(美)'},
+                {value: 'Guam', name: '关岛(美)'},
+                {value: 'Aruba', name: '阿鲁巴(荷)'},
+                {value: 'Curaçao', name: '库拉索(荷)'},
+                {value: 'New Caledonia', name: '新喀里多尼亚(法)'},
+                {value: 'French Polynesia', name: '法属波利尼西亚'},
+                {value: 'American Samoa', name: '美属萨摩亚'},
+                {value: 'Cook Islands', name: '库克群岛'},
+                {value: 'Niue', name: '纽埃'},
+                {value: 'Falkland Islands', name: '马尔维纳斯群岛(英)'},  // 网页[5]
+                {value: 'Gibraltar', name: '直布罗陀(英)'},
+                {value: 'Faroe Islands', name: '法罗群岛(丹)'},
+                {value: 'Isle of Man', name: '马恩岛(英)'}
+            ]
+            const provinces = {
+                "全国": ["全国情况"],
+                "湖北": ["全省情况", "仙桃", "十堰", "咸宁", "天门", "孝感", "宜昌", "恩施州", "武汉", "潜江", "神农架林区", "荆州", "荆门", "襄阳", "鄂州", "随州", "黄冈", "黄石"],
+                "上海": ["全市情况"],
+                "云南": ["全省情况", "临沧", "丽江", "保山", "境外输入人员", "大理州", "德宏州", "文山州", "昆明", "昭通", "普洱", "曲靖", "楚雄州", "玉溪", "红河州", "西双版纳"],
+                "内蒙古": ["全省情况", "乌兰察布", "乌海", "兴安盟", "包头", "呼伦贝尔", "呼和浩特", "境外输入人员", "巴彦淖尔", "赤峰", "通辽", "鄂尔多斯", "锡林郭勒", "阿拉善盟"],
+                "北京": ["全市情况"],
+                "台湾": ["全省情况"],
+                "吉林": ["全省情况", "公主岭", "吉林", "四平", "延边", "松原", "梅河口", "白城", "辽源", "通化", "长春"],
+                "四川": ["全省情况", "乐山", "内江", "凉山州", "南充", "宜宾", "巴中", "广元", "广安", "德阳", "成都", "攀枝花", "泸州", "甘孜州", "眉山", "绵阳", "自贡", "资阳", "达州", "遂宁", "阿坝州", "雅安"],
+                "天津": ["全市情况"],
+                "宁夏": ["全省情况", "中卫", "吴忠", "固原", "宁东", "石嘴山", "银川"],
+                "安徽": ["全省情况", "亳州", "六安", "合肥", "安庆", "宣城", "宿州", "池州", "淮北", "淮南", "滁州", "芜湖", "蚌埠", "铜陵", "阜阳", "马鞍山", "黄山"],
+                "山东": ["全省情况", "临沂", "境外输入", "威海", "德州", "日照", "枣庄", "泰安", "济南", "济宁", "淄博", "滨州", "潍坊", "烟台", "聊城", "菏泽", "青岛"],
+                "山西": ["全省情况", "临汾", "吕梁", "境外输入人员", "大同", "太原", "忻州", "晋中", "晋城", "朔州", "运城", "长治", "阳泉"],
+                "广东": ["全省情况", "东莞", "中山", "佛山", "广州", "惠州", "揭阳", "梅州", "汕头", "汕尾", "江门", "河源", "深圳", "清远", "湛江", "潮州", "珠海", "肇庆", "茂名", "阳江", "韶关"],
+                "广西": ["全省情况", "北海", "南宁", "境外输入", "未明确地区", "来宾", "柳州", "桂林", "梧州", "河池", "玉林", "百色", "贵港", "贺州", "钦州", "防城港"],
+                "新疆": ["全省情况", "乌鲁木齐", "五家渠", "伊犁州", "吐鲁番", "喀什", "巴州", "昌吉州", "未公布来源", "石河子", "第七师", "第九师", "第十二师", "第四师", "阿克苏地区"],
+                "江苏": ["全省情况", "南京", "南通", "境外输入", "宿迁", "常州", "徐州", "扬州", "无锡", "泰州", "淮安", "盐城", "苏州", "连云港", "镇江"],
+                "江西": ["全省情况", "上饶", "九江", "南昌", "吉安", "宜春", "抚州", "新余", "景德镇", "萍乡", "赣州", "赣江新区", "鹰潭"],
+                "河北": ["全省情况", "保定", "唐山", "境外输入", "廊坊", "张家口", "承德", "沧州", "石家庄", "秦皇岛", "衡水", "邢台", "邯郸", "雄安新区"],
+                "河南": ["全省情况", "三门峡市", "信阳市", "南阳市", "周口市", "商丘市", "境外输入", "安阳市", "平顶山市", "开封市", "新乡市", "洛阳市", "济源示范区", "漯河市", "濮阳市", "焦作市", "许昌市", "郑州市", "驻马店市", "鹤壁市"],
+                "浙江": ["全省情况", "丽水", "台州", "嘉兴", "境外输入", "宁波", "杭州", "温州", "湖州", "省十里丰监狱", "绍兴", "舟山", "衢州", "金华"],
+                "海南": ["全省情况", "万宁", "三亚", "东方", "临高", "乐东", "保亭", "儋州", "境外输入", "定安", "文昌", "昌江", "海口", "澄迈", "琼中", "琼海", "陵水"],
+                "湖南": ["全省情况", "境外输入", "娄底市", "岳阳市", "常德市", "张家界市", "怀化市", "株洲市", "永州市", "湘潭市", "湘西自治州", "益阳市", "衡阳市", "邵阳市", "郴州市", "长沙市"],
+                "澳门": ["全市情况"],
+                "甘肃": ["全省情况", "临夏州", "兰州", "嘉峪关", "境外输入人员", "外省输入", "天水", "定西", "平凉", "庆阳", "张掖", "甘南州", "白银", "金昌", "陇南"],
+                "福建": ["全省情况", "三明", "南平", "厦门", "境外输入", "宁德", "泉州", "漳州", "福州", "莆田", "龙岩"],
+                "西藏": ["全省情况", "拉萨"],
+                "贵州": ["全省情况", "六盘水", "境外输入人员", "安顺", "毕节", "贵阳", "遵义", "铜仁", "黔东南州", "黔南州", "黔西南州"],
+                "辽宁": ["全省情况", "丹东", "境外输入", "大连", "抚顺", "朝阳", "本溪", "沈阳", "盘锦", "营口", "葫芦岛", "辽阳", "铁岭", "锦州", "阜新", "鞍山"],
+                "重庆": ["全市情况"],
+                "陕西": ["全省情况", "咸阳", "商洛", "境外输入", "安康", "宝鸡", "延安", "待确认", "杨凌示范区", "榆林", "汉中", "渭南", "西安", "铜川", "韩城"],
+                "青海": ["全省情况", "海东", "海北州", "西宁"],
+                "香港": ["全市情况"],
+                "黑龙江": ["全省情况", "七台河", "伊春", "佳木斯", "双鸭山", "哈尔滨", "境外输入", "大兴安岭", "大庆", "未公布来源", "牡丹江", "绥化", "鸡西", "鹤岗", "黑河", "齐齐哈尔"]
+            };
+
+            function updateAreaOptions() {
+                const cityLabel = document.getElementById('city-label');
+                const $citySelect = $('#city-select');
+
+                areaSelect.innerHTML = '';
+                citySelect.innerHTML = '';
+                citySelect.style.display = 'none';
+                cityLabel.style.display = 'none';
+                $citySelect.next('.select2-container').hide();  // 默认隐藏 select2 容器
+
+                if (isDomesticView()) {
+                    areaLabel.textContent = '省份:';
+                    toggleCitySelect(true); // ✅ 显示城市
+                    for (const province in provinces) {
+                        const option = document.createElement('option');
+                        option.value = province;
+                        option.textContent = province;
+                        areaSelect.appendChild(option);
+                    }
+
+                    updateCityOptions();
+
+                    cityLabel.style.display = 'inline-block';
+                    citySelect.style.display = 'inline-block';
+                    $citySelect.next('.select2-container').show();  // 显示 select2 容器
+
+                    areaSelect.value = Object.keys(provinces)[0];
+                    updateCityOptions();
+
+                    toggleCitySelect(true);
+                } else {
+                    areaLabel.textContent = '国家:';
+                    toggleCitySelect(false); // ✅ 隐藏城市
+                    countryList.forEach(item => {
+                        const option = document.createElement('option');
+                        option.value = item.value;
+                        option.textContent = item.name;
+                        areaSelect.appendChild(option);
+                    });
+
+                    cityLabel.style.display = 'none';
+                    citySelect.style.display = 'none';
+                    $citySelect.next('.select2-container').hide();  // 隐藏 select2 容器
+                }
+            }
+
+
+            function updateCityOptions() {
+                console.log('[updateCityOptions] 执行中...');
+                const selectedProvince = areaSelect.value;
+                console.log('[updateCityOptions] 当前选中的省份:', selectedProvince);
+                const cities = provinces[selectedProvince] || [];
+
+                const $citySelect = $('#city-select');
+                const cityLabel = document.getElementById('city-label');
+                const citySelect = document.getElementById('city-select');
+
+                // 清空旧选项
+                $citySelect.empty();
+
+                // 添加新选项（new Option(text, value, defaultSelected, selected)）
+                cities.forEach(city => {
+                    const option = new Option(city, city, false, false);
+                    $citySelect.append(option);
+                });
+
+                // ✅ 重新初始化 Select2
+                reinitSelect2($citySelect);
+
+                // 控制显示与否
+                const show = cities.length > 0;
+                citySelect.style.display = show ? 'inline-block' : 'none';
+                cityLabel.style.display = show ? 'inline-block' : 'none';
+                $citySelect.next('.select2-container').toggle(show);
+            }
+
+            $('#area-select').on('change', function () {
+                console.log('[change] area-select 被触发，当前值 =', this.value);
+                updateCityOptions();
+            });
+            areaSelect.addEventListener('change', updateCityOptions);
+
+            // 切换全球/国内视图
+            const globalBtn = document.getElementById('global-btn');
+            const domesticBtn = document.getElementById('domestic-btn');
+
+            globalBtn.addEventListener('click', function () {
+                globalBtn.classList.add('active');
+                domesticBtn.classList.remove('active');
+                loadGlobalData();
+            });
+
+            domesticBtn.addEventListener('click', function () {
+                domesticBtn.classList.add('active');
+                globalBtn.classList.remove('active');
+                loadDomesticData();
+            });
+
+            // 初始化图表
+            const trendCtx = document.getElementById('trend-chart').getContext('2d');
+
+            const trendChart = new Chart(trendCtx, {
+                type: 'line',
+                data: {
+                    datasets: [
+                        {
+                            label: '确诊人数',
+                            data: [],
+                            borderColor: '#e74a3b',
+                            backgroundColor: 'rgba(231, 74, 59, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.3,
+                            fill: true
+                        },
+                        {
+                            label: '死亡人数',
+                            data: [],
+                            borderColor: '#5a5c69',
+                            backgroundColor: 'rgba(90, 92, 105, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.3,
+                            fill: true
+                        },
+                        {
+                            label: '治愈人数',
+                            data: [],
+                            borderColor: '#1cc88a',
+                            backgroundColor: 'rgba(28, 200, 138, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.3,
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            type: 'time',
+                            time: {
+                                unit: 'day',
+                                tooltipFormat: 'YYYY-MM-DD',
+                                displayFormats: {
+                                    day: 'MMM D'
+                                }
+                            },
+                            grid: {
+                                display: false
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: '#e3e6f0'
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false
+                        },
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 20
+                            }
+                        }
+                    },
+                    interaction: {
+                        intersect: false,
+                        mode: 'nearest'
+                    }
+                }
+            });
+
+
+            function parseHistoryData(rawData) {
+                const cases = [], deaths = [], recovered = [];
+                rawData.forEach(item => {
+                    // 直接用后端给你的 '日期'、new_conf、new_death、new_recover
+                    const date = new Date(item['日期']);        // e.g. '2020/08/09'
+                    cases.push({x: date, y: item.new_conf});
+                    deaths.push({x: date, y: item.new_death});
+                    recovered.push({x: date, y: item.new_recover});
+                });
+                return {cases, deaths, recovered};
+            }
+
+            /*───────────────────────────────────────────────────────────*/
+            /* 1. 把历史 + 预测 + 摘要一次性渲染到图表和右侧卡片            */
+
+            /*───────────────────────────────────────────────────────────*/
+            function updateChartAndSummary({hist, fcst, sum, mse, title}) {
+                const historicalData = parseHistoryData(hist);
+                const predictionData = parseHistoryData(fcst);
+
+                // 三条曲线共用一段逻辑，避免复制粘贴
+                [
+                    ['cases', '#e74a3b', '#96CCCB'],  // 确诊  → 预测
+                    ['deaths', '#5a5c69', '#df0054'],  // 死亡
+                    ['recovered', '#1cc88a', '#333399']   // 治愈
+                ].forEach(([field, colorHist, colorFcst], idx) => {
+                    const hArr = historicalData[field];
+                    const fArr = predictionData[field];
+trendChart.data.datasets[idx].borderWidth = 4;
+trendChart.data.datasets[idx].fill = false;
+
+                    trendChart.data.datasets[idx].data = hArr.concat(fArr);
+                    trendChart.data.datasets[idx].segment = {
+                        borderColor: ctx => ctx.p0DataIndex < hArr.length ? colorHist : colorFcst,
+                        borderDash: ctx => ctx.p0DataIndex < hArr.length ? [] : [6, 4]
+                    };
+                });
+
+                // 右侧摘要卡片
+                document.getElementById('prediction-title').textContent = title;
+                document.getElementById('predicted-cases').textContent = sum.predicted_cases;
+                document.getElementById('predicted-cases-growth').textContent = sum.predicted_cases_growth;
+                document.getElementById('predicted-deaths').textContent = sum.predicted_deaths;
+                document.getElementById('predicted-deaths-growth').textContent = sum.predicted_deaths_growth;
+                document.getElementById('predicted-recovered').textContent = sum.predicted_recovered;
+                document.getElementById('predicted-recovered-growth').textContent = sum.predicted_recovered_growth;
+                document.getElementById('prediction-accuracy').textContent = mse + '%';
+
+                trendChart.update();
+                applySignClasses();
+            }
+
+            /*───────────────────────────────────────────────────────────*/
+            /* 2. 各接口字段映射到 updateChartAndSummary 所需结构          */
+
+            /*───────────────────────────────────────────────────────────*/
+            function packScopeData(scope, data) {
+                if (scope === 'global') {
+                    return {
+                        hist: data.global_history,
+                        fcst: data.global_forecast,
+                        sum: data.global_summary,
+                        mse: data.g_mse,
+                        title: data.global_summary?.prediction_title || '全球未来7天预测',
+                        date: data.date
+                    };
+                }
+                // 默认 china
+                return {
+                    hist: data.china_history,
+                    fcst: data.china_forecast,
+                    sum: data.china_summary,
+                    mse: data.c_mse,
+                    title: data.china_summary?.prediction_title || '全国未来7天预测',
+                    date: data.date
+                };
+            }
+
+            /*───────────────────────────────────────────────────────────*/
+            /* 3. 通用加载器：global / china 都可以直接调用                */
+
+            /*───────────────────────────────────────────────────────────*/
+            async function loadScope(scope) {
+                showLoading();
+                loadSummary(scope);                    // 左上角统计卡片
+
+                try {
+                    const raw = await fetch('/predict_main').then(r => r.json());
+                    const pack = packScopeData(scope, raw);
+
+                    updateChartAndSummary(pack);
+                    updateAreaOptions();
+                    updateconf_date(pack.date);
+                } catch (err) {
+                    console.error(err);
+                } finally {
+                    hideLoading();
+                }
+            }
+
+            /*───────────────────────────────────────────────────────────*/
+            /* 4. 对外暴露的两个入口（按钮点击时调用）                     */
+
+            /*───────────────────────────────────────────────────────────*/
+            function loadGlobalData() {
+                loadScope('global');
+            }
+
+            function loadDomesticData() {
+                loadScope('china');
+            }
+
+            /*───────────────────────────────────────────────────────────*/
+            /* 5. 预测按钮 <POST /predict_result> 把结果直接丢进通用渲染    */
+
+            /*───────────────────────────────────────────────────────────*/
+            function loadData(res) {
+                showLoading();
+                updateChartAndSummary({
+                    hist: res.historical,
+                    fcst: res.forecast,
+                    sum: res.summary,
+                    mse: res.mes,
+                    title: `${res.area}未来${res.forecast_days}天预测情况`
+                });
+                updateCityOptions();
+                hideLoading();
+            }
+
+            /*───────────────────────────────────────────────────────────*/
+            /* 6. 事件绑定（如果你已绑定就忽略   — 这里只给示例）           */
+            /*───────────────────────────────────────────────────────────*/
+
+            // 更新预测摘要
+            function updatePredictionSummary(predictionData) {
+                const lastCase = predictionData.cases[predictionData.cases.length - 1].y;
+                const lastDeath = predictionData.deaths[predictionData.deaths.length - 1].y;
+                const lastRecovered = predictionData.recovered[predictionData.recovered.length - 1].y;
+
+                document.getElementById('predicted-cases').textContent = lastCase.toLocaleString();
+                document.getElementById('predicted-deaths').textContent = lastDeath.toLocaleString();
+                document.getElementById('predicted-recovered').textContent = lastRecovered.toLocaleString();
+            }
+
+            applySignClasses();
+            loadGlobalData();
+        });
+    </script>
+{% endblock content %}

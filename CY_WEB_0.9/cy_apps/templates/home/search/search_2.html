@@ -1,0 +1,145 @@
+{% extends "layouts/base.html" %}
+{% block title %} 统计学多维度查询 {% endblock %}
+{% block content %}
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Freight Text Pro', 'Noto Serif SC', serif !important;
+            font-size: 1rem;
+            font-weight: 400;
+            line-height: 1.5;
+            color: #E11D48;
+            background-color: var(--bs-body-bg);
+            -webkit-text-size-adjust: 100%;
+            -webkit-tap-highlight-color: rgba(17, 24, 39, 0);
+        }
+    </style>
+    <style>
+        /* 样式：全局设置 */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f7f7f7;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            width: 80%;
+            margin: 0 auto;
+            padding: 30px;
+            background-color: #fff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+
+        h1.title {
+            text-align: center;
+            color: #2c3e50;
+        }
+
+        /* 表单 */
+        .search-form {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            font-size: 16px;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+            margin-top: 5px;
+        }
+
+        .btn-submit {
+            background-color: #3498db;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .btn-submit:hover {
+            background-color: #2980b9;
+        }
+
+        /* 结果显示 */
+        .result {
+            margin-top: 30px;
+            background-color: #ecf0f1;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            color: #2c3e50;
+        }
+
+        h3 {
+            color: #34495e;
+            margin-top: 20px;
+        }
+
+        p {
+            font-size: 16px;
+            color: #7f8c8d;
+        }
+    </style>
+    </head>
+    <body>
+    <div class="row">
+        <div class="col-12 col-lg-6">
+            <div class="card border-0 shadow">
+                <div class="">
+                    <div class="card-body">
+                        <div class="container">
+                            <h1 class="title">输入国家和起止日期进行疫情统计学尺度上的查询</h1>
+
+                            <!-- 查询表单 -->
+                            <form action="{{ url_for('home_blueprint.s_2') }}" method="POST" class="search-form">
+                                <div class="form-group">
+                                    <label for="country">国家：</label>
+                                    <input type="text" id="country" name="country" required class="form-control">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="start_date">开始日期：</label>
+                                    <input type="date" id="start_date" name="start_date" required class="form-control">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="end_date">结束日期：</label>
+                                    <input type="date" id="end_date" name="end_date" required class="form-control">
+                                </div>
+
+                                <button type="submit" class="btn-submit">提交</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- 显示结果 -->
+        {% if result %}
+            <div class="result">
+                <h2 class="text-center">{{str_title}}</h2>
+                <div>{{ result|safe }}</div> <!-- 使用 |safe 过滤器确保 HTML 渲染 -->
+            </div>
+        {% endif %}
+    </div>
+{% endblock content %}

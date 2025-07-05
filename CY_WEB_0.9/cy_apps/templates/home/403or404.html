@@ -1,0 +1,28 @@
+{% extends "layouts/base-fullscreen.html" %}
+{% block title %}访问错误{% endblock %}
+{% block content %}
+    <main>
+        <section class="vh-100 d-flex align-items-center justify-content-center">
+            <div class="container" style="transform: scale(1.5);">
+                <div class="row">
+                    <div class="mb-4 text-center d-flex align-items-center justify-content-center">
+                        <div>
+                            <img style="width: 15%; height: 20%; margin-bottom: 2.5%" src="{{ config.ASSETS_ROOT }}/img/svg/document-error-svgrepo-com.svg">
+                            <h1 class="c1">
+                                您的访问<span class="fw-bolder text-primary">被拒绝</span>,或<span class="fw-bolder text-primary">页面不存在</span>
+                            </h1>
+                            <p class="lead my-4 c1">
+                                请联系我们汇报问题, 或进行身份验证
+                            </p>
+                            <a href="https://it.bjfu.edu.cn/" class="btn btn-gray-800 d-inline-flex align-items-center justify-content-center me-2">
+                                联系我们
+                            </a>
+                            <a class="btn btn-secondary d-inline-flex align-items-center me-2 dropdown-toggle" href="{{ url_for('authentication_blueprint.logout_to_login') }}">
+                               登录</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+{% endblock content %}
